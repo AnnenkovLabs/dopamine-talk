@@ -187,12 +187,15 @@ Most AI changelogs narrate the diff (`f(x)`): *"Updated dependencies in package.
 
 Not a lazy Google-translated clone — both editions are authored natively for how developers actually work in each language:
 
-| Edition | Path | Rules File | Built For |
-| :--- | :--- | :--- | :--- |
-| **English (Western)** | [`skills/`](skills/) | [`AGENTS.md`](AGENTS.md) | Adapted cleanly for English/Western workflows: 5 post-RL fixes, anti-corporate-AI-slop voice, English triggers (`"dopamine-talk"`, `"drop the hedging"`, `"no fluff"`). Zero non-English clutter. |
-| **Russian (Original)** | [`skills-ru/`](skills-ru/) | [`docs/i18n/AGENTS.ru.md`](docs/i18n/AGENTS.ru.md) | The original native Russian pack with all 6 post-RL fixes — including dedicated protection against cross-lingual **Runglish** token collapse where models drop random English phrases into Russian replies. |
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/readme/editions-en-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="assets/readme/editions-en-light.svg">
+    <img src="assets/readme/editions-en-dark.svg" alt="Two Native Editions diagram (two obsidian-glass cards linked by a bidirectional switch icon). Left card [WESTERN EDITION · English (Native)]: paths skills/ and AGENTS.md; 5 post-RL fixes + anti-corporate-AI-slop voice; zero non-English clutter or Runglish rules; triggers 'dopamine-talk', 'no fluff', 'drop hedging'. Right card [ORIGINAL AUTHOR PACK · Russian (Native)]: paths skills-ru/ and AGENTS.ru.md; all 6 post-RL fixes from the original Nov 17 pack; Anti-Runglish shield stops English-in-Russian collapse; native Russian triggers + full RU README and Changelog. Bottom bar: Same clean skill names, 1-second switch via ./install.sh --lang en|ru --force." width="840">
+  </picture>
+</p>
 
-Both editions install cleanly under the exact same skill names (`dopamine-talk`, `dopamine-readme`, `dopamine-changelog`) and you can switch between them in one second via `./install.sh --lang en|ru --force`.
+Browse directly: **[`skills/`](skills/)** &amp; **[`AGENTS.md`](AGENTS.md)** (Western English) · **[`skills-ru/`](skills-ru/)** &amp; **[`docs/i18n/AGENTS.ru.md`](docs/i18n/AGENTS.ru.md)** (Russian Original).
 
 <br>
 
@@ -206,28 +209,27 @@ Both editions install cleanly under the exact same skill names (`dopamine-talk`,
 
 ## Five Post-RL Reflexes Stripped
 
-| Post-Training Reflex | Why It Happens | What You Get Instead |
-| :--- | :--- | :--- |
-| **1. Critic-Gate Conditioning** | RLVR rewards passing `pytest`/linters, gluing "good idea" to "add another blocker". | Bold product capabilities, speed, UX magic, and real leverage instead of new gates and reviewers. |
-| **2. Rubric Reward Hacking** | SFT/RLHF judges punish omissions, so models dump flat inventories of every subsystem. | Theory of Mind: obvious plumbing disappears completely; only genuine breakthroughs hit the page. |
-| **3. Code-Trace Narration** | Millions of agent trajectories teach models to prove they read `file.ts:205`. | Cause, effect, and workflow clarity — density of meaning without dumping source-code guts. |
-| **4. Calibration Paranoia** | Anti-hallucination penalties trigger timid refusals and legal footnotes around every estimate. | Confident Before -> After engineering estimates marked `In theory:` with zero whining after the table. |
-| **5. Learned Helplessness** | Ticket-scoped training makes models shrink ambitious dreams into timid MVPs. | Full-strength architecture using native capabilities of your stack, solving edge cases up front. |
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/readme/reflexes-en-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="assets/readme/reflexes-en-light.svg">
+    <img src="assets/readme/reflexes-en-dark.svg" alt="Five Post-RL Reflexes Stripped diagram (monolithic obsidian-glass matrix mapping stripped RLVR reflexes on the left to outcomes on the right). 01 Critic-Gate Conditioning (RLVR glues 'good idea' to adding pytest gates &amp; blockers) -> Bold product capabilities, speed &amp; UX magic instead of bureaucratic reviewer checklists. 02 Rubric Reward Hacking (SFT judges punish omissions -> flat subsystem inventories) -> Theory of Mind: obvious plumbing vanishes; only genuine leverage &amp; breakthroughs land. 03 Code-Trace Narration (Agent logs teach dumping file.ts:205 to prove reading) -> Living workflow mechanics, cause &amp; user impact without narrating AST guts or private vars. 04 Calibration Paranoia (Hallucination penalties trigger timid benchmark refusals) -> Confident Before -> After engineering estimates marked 'In theory:' with zero apologetic caveats. 05 Learned Helplessness (Ticket-scoped training shrinks dreams into timid MVPs) -> Full-strength architecture shipped today using clever native capabilities of your stack." width="840">
+  </picture>
+</p>
 
-*(Plus anti-corporate-AI-slop discipline baked into voice & tone — and in the [Russian edition](docs/i18n/README.ru.md), reflex #6 kills cross-lingual English-in-Russian token collapse.)*
+*(Plus anti-corporate-AI-slop discipline baked into voice &amp; tone — and in the [Russian edition](docs/i18n/README.ru.md), reflex #6 kills cross-lingual English-in-Russian token collapse.)*
 
 <br>
 
 ## Expected Impact
 
-In theory:
-
-| Dimension | Default Agent Autopilot | With Dopamine Talk Pack | Net Gain | Multiplier |
-| :--- | :--- | :--- | :--- | :--- |
-| **Signal-to-noise in architecture replies** | ~35% (padded with plumbing, paths & caveats) | **~90%** (pure mechanics, leverage & numbers) | **+157% signal density** | **2.6x higher clarity** |
-| **Time to "Aha!" on a GitHub README** | 30-60 s skimming flat feature lists | **< 5 s** (hero, KPI glance, Before/After visual) | **-85% time to hook** | **6x faster first impression** |
-| **Changelog usefulness for real users** | Raw diff recap + vague "perf improved" | **100% user impact** (`f'(x)`, versions, CVEs) | **Zero diff translation** | **Every bullet earns the upgrade** |
-| **Runtime overhead & dependencies** | Scripts, hooks, or prompt wrappers | **0 deps · pure Markdown** | **0 ms startup cost** | **Works in 20+ agents instantly** |
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/readme/impact-en-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="assets/readme/impact-en-light.svg">
+    <img src="assets/readme/impact-en-dark.svg" alt="Expected Impact telemetry diagram (In theory: Before vs After visual comparison bars and net-gain multipliers). Row 1: Signal-to-noise in architecture replies — Before ~35% (plumbing, paths &amp; caveats) vs After ~90% pure mechanics &amp; leverage -> 2.6x (+157% clarity). Row 2: Time to 'Aha!' on a GitHub README — Before 30-60 s skimming flat lists vs After under 5 s visual hook &amp; KPI glance -> 6x (-85% time to hook). Row 3: Changelog usefulness for real users — Before raw diff recap &amp; vague perf notes vs After 100% user impact f'(x) &amp; exact CVEs -> 100% (zero diff noise). Row 4: Runtime overhead &amp; dependencies — Before wrapper scripts, hooks &amp; proxies vs After pure Markdown working in 20+ agents -> 0 ms (0 dependencies)." width="840">
+  </picture>
+</p>
 
 <br>
 
@@ -245,13 +247,15 @@ In theory:
 
 ## Everything Else You Expect (Yes, It's Built In)
 
-No bloated frameworks, no hidden binaries, no API keys — just clean multi-agent packaging modeled after the best skill repos on GitHub:
+No bloated frameworks, no hidden binaries, no API keys — one pure `SKILL.md` core wired into every modern agent ecosystem out of the box:
 
-| | | | |
-| :--- | :--- | :--- | :--- |
-| Interactive CLI installer | EN & RU dual editions | Native `npx skills` CLI | Claude Code marketplace (EN & RU) |
-| Codex CLI & Desktop plugin | Antigravity CLI plugin | Gemini CLI extension | Copilot CLI marketplace (EN & RU) |
-| Auto-detect installed agents | Instant `EN <-> RU` switch | Dark & light GitHub SVGs | Strict YAML, UTF-8 & link CI |
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/readme/builtin-en-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="assets/readme/builtin-en-light.svg">
+    <img src="assets/readme/builtin-en-dark.svg" alt="Built-in architecture hub diagram: central obsidian-glass core 'CORE: SKILL.md (0 deps · 20+ agents)' connected by optical bus traces to 4 surrounding feature modules. Module 01 [NATIVE AGENT PLUGINS]: Claude Code, Codex CLI, Antigravity, Gemini CLI, Copilot CLI, npx skills — 8 validated manifests + zero-config discovery. Module 02 [INTERACTIVE INSTALLER]: Auto-detect agents, EN/RU wizard, Symlink or Copy, macOS/Linux/Win — one curl command, instant --status &amp; --force. Module 03 [DUAL NATIVE EDITIONS]: Western EN (5 fixes), Native RU (6 fixes), AGENTS.md rulesets, 1s EN <-> RU switch — same clean skill names in every host tool. Module 04 [VISUAL CRAFT &amp; CI]: Dark &amp; light SVGs, embedded fonts, YAML &amp; UTF-8 CI, link &amp; asset check — zero broken links, zero orphan files, MIT." width="840">
+  </picture>
+</p>
 
 <br>
 
