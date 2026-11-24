@@ -9,6 +9,7 @@
 <p><a href="../../README.md">English</a> · <strong>Русский</strong></p>
 
 <p>
+  <a href="https://dopamine.annenkov.me/?lang=ru"><img src="https://img.shields.io/badge/%D1%81%D0%B0%D0%B9%D1%82-dopamine.annenkov.me-c92639?style=flat-square" alt="Сайт: dopamine.annenkov.me"></a>
   <a href="CHANGELOG.ru.md"><img src="https://img.shields.io/badge/%D1%80%D0%B5%D0%BB%D0%B8%D0%B7-v1.0.0-ff6b4a?style=flat-square" alt="Релиз: v1.0.0"></a>
   <a href="#две-родные-версии-русский-и-western-english"><img src="https://img.shields.io/badge/%D0%B2%D0%B5%D1%80%D1%81%D0%B8%D0%B8-RU%20%C2%B7%20EN-ffb454?style=flat-square" alt="Две версии: Русский и Western English"></a>
   <a href="#три-скилла-в-паке"><img src="https://img.shields.io/badge/%D1%81%D0%BA%D0%B8%D0%BB%D0%BB%D1%8B-3-4fd1a5?style=flat-square" alt="3 скилла в паке"></a>

@@ -1,0 +1,28 @@
+name: Bug Report
+description: Report a broken installer path, skill trigger issue, or manifest error
+labels: ["bug"]
+body:
+  - type: input
+    id: agent
+    attributes:
+      label: Coding Agent & OS
+      placeholder: "e.g., Claude Code 1.x on macOS 15 / Codex CLI on Ubuntu 24.04"
+    validations:
+      required: true
+  - type: dropdown
+    id: edition
+    attributes:
+      label: Edition
+      options:
+        - English (skills/)
+        - Russian (skills-ru/)
+        - Both / Installer
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      placeholder: Describe the exact command, error output, or unexpected agent behavior.
+    validations:
+      required: true

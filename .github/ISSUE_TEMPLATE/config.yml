@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Live Site & Before/After Examples
+    url: https://dopamine.annenkov.me/
+    about: Compare real default vs Dopamine Talk outputs and copy 1-line install commands.
+  - name: Community Discussions
+    url: https://github.com/AnnenkovLabs/dopamine-talk/discussions
+    about: Share Before/After screenshots, prompt ideas, or ask questions.

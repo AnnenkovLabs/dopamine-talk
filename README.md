@@ -9,6 +9,7 @@
 <p><strong>English</strong> · <a href="docs/i18n/README.ru.md">Русский</a></p>
 
 <p>
+  <a href="https://dopamine.annenkov.me/"><img src="https://img.shields.io/badge/website-dopamine.annenkov.me-c92639?style=flat-square" alt="Website: dopamine.annenkov.me"></a>
   <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/release-v1.0.0-ff6b4a?style=flat-square" alt="Release: v1.0.0"></a>
   <a href="#two-native-editions"><img src="https://img.shields.io/badge/editions-EN%20%C2%B7%20RU-ffb454?style=flat-square" alt="Two native editions: English and Russian"></a>
   <a href="#the-three-skills"><img src="https://img.shields.io/badge/skills-3-4fd1a5?style=flat-square" alt="3 skills included"></a>
