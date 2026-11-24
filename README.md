@@ -3,8 +3,10 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/hero-en-dark.svg">
   <source media="(prefers-color-scheme: light)" srcset="assets/readme/hero-en-light.svg">
-  <img src="assets/readme/hero-en-dark.svg" alt="Dopamine Talk: Decompress stiff RLVR coding agents back into sharp, fearless teammates." width="840">
+  <img src="assets/readme/hero-en-dark.svg" alt="Hero banner: 3D obsidian crystal-glass squircle icon with crimson left-rim refraction and liquid-chrome speech-bubble voice-bars emblem, next to title 'Dopamine Talk' and tagline 'Decompress stiff RLVR coding agents back into sharp, fearless teammates.'" width="840">
 </picture>
+
+<p><strong>English</strong> · <a href="docs/i18n/README.ru.md">Русский</a></p>
 
 <p>
   <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/release-v1.0.0-ff6b4a?style=flat-square" alt="Release: v1.0.0"></a>
@@ -12,7 +14,6 @@
   <a href="#the-three-skills"><img src="https://img.shields.io/badge/skills-3-4fd1a5?style=flat-square" alt="3 skills included"></a>
   <a href="INSTALL.md"><img src="https://img.shields.io/badge/works%20with-20%2B%20agents-24242b?style=flat-square" alt="Works with 20+ agents"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-6c7382?style=flat-square" alt="MIT License"></a>
-  <a href="docs/i18n/README.ru.md"><img src="https://img.shields.io/badge/lang-%D0%A0%D1%83%D1%81%D1%81%D0%BA%D0%B8%D0%B9-5865F2?style=flat-square" alt="Читать на русском"></a>
 </p>
 
 <p><strong>Frontier coding models got smarter, and somehow way more exhausting to talk to.</strong><br>
@@ -23,7 +24,7 @@ Three zero-dependency skills in two native editions (<strong>Western English</st
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="assets/readme/glance-en-dark.svg">
   <source media="(prefers-color-scheme: light)" srcset="assets/readme/glance-en-light.svg">
-  <img src="assets/readme/glance-en-dark.svg" alt="Dopamine Talk at a glance: 3 skills (Talk, README, Changelog), 2 native editions (Western EN and Native RU), 0 dependencies (pure Markdown, any model), 20+ agents (interactive installer and native plugins)." width="840">
+  <img src="assets/readme/glance-en-dark.svg" alt="Pack at a glance diagram (4 obsidian-glass KPI cards plus 3-row skill summary panel). KPI cards: (1) '3 skills' — Talk, README, Changelog; (2) '2 editions' — Western EN, Native RU; (3) '0 deps' — Pure Markdown, any model; (4) '20+ agents' — Interactive CLI &amp; plugins. Summary panel rows: DOPAMINE TALK — Kills critic-gates, AST dumps, hedging &amp; AI slop, restores golden-era drive; DOPAMINE README — 5-second scroll test, crystal dark/light visuals, 'Aha!' priority ladder; DOPAMINE CHANGELOG — Turns raw git diffs into user impact f'(x), Before -> After tables &amp; CVE clarity." width="840">
 </picture>
 
 </div>
@@ -56,7 +57,7 @@ Without decompression, the model dumps file names (`SpriteBatcher.ts`, `SchemaLo
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/readme/before-after-en-dark.svg">
     <source media="(prefers-color-scheme: light)" srcset="assets/readme/before-after-en-light.svg">
-    <img src="assets/readme/before-after-en-dark.svg" alt="Live A/B comparison on the same model and release diff: Without skill, the agent dumps SpriteBatcher.ts, SchemaLoader.ts, Logger.ts, and 38 unit tests, adds pending-benchmark caveats, and uses dry telemetry. With Dopamine Talk, it cuts plumbing, explains match stutter plainly, gives an In theory 24-player table (252,000/sec to 0, -90% traffic, locked 60 FPS), and pitches LAN-feel client prediction." width="840">
+    <img src="assets/readme/before-after-en-dark.svg" alt="Side-by-side live A/B comparison diagram (same model and release diff). Shared prompt pill: Live A/B (same model &amp; release diff): 'Explain key wins, estimate impact (no benchmark yet), pitch 1 bold upgrade.' Left smoked-glass card [WITHOUT SKILL · REAL DEFAULT OUTPUT]: Zero-alloc rendering (SpriteBatcher.ts): Replaced ~252k/sec allocs with a reusable buffer pool; Hardening (SchemaLoader.ts, Logger.ts): Bumped schemaVersion 3, structured logging &amp; 38 unit tests; Estimated Impact (pending 24-player benchmark): Should sharply reduce GC pauses and 99th-percentile frame spikes, cut bandwidth roughly 70-90%, depending on player clustering. Bottom tags: File paths, 38 tests fluff, Pending caveat, Dry metrics. Right crimson-lit crystal card [WITH DOPAMINE TALK · REAL OUTPUT]: This release kills both major sources of match stutter: ~252,000 allocs/sec -> 0 via memory pool, plus compact binary deltas only for what's on screen. In theory (24-player fight): Frame allocs 252,000/sec -> 0/sec; Sync ~400 KB/s JSON stalls -> ~30 KB/s (-90%); Pacing 30-40 FPS hitches -> Locked 60 FPS. Next: client prediction — 120 ms ping feels like LAN. Bottom tags: Zero plumbing, In theory table, Lived game feel, No caveats." width="840">
   </picture>
 </p>
 
@@ -136,7 +137,7 @@ Read the full unfiltered original prompt (with the real chat dump that triggered
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/readme/strip-skills-en-dark.svg">
     <source media="(prefers-color-scheme: light)" srcset="assets/readme/strip-skills-en-light.svg">
-    <img src="assets/readme/strip-skills-en-dark.svg" alt="Section divider: THE PACK - Three sharp prompts covering dialogue, releases, and GitHub showcase" width="840">
+    <img src="assets/readme/strip-skills-en-dark.svg" alt="Section divider banner: 'THE PACK' — Three sharp prompts covering dialogue, releases, and GitHub showcase." width="840">
   </picture>
 </p>
 
@@ -148,7 +149,7 @@ All three skills are plain Markdown (`SKILL.md`) with zero runtime dependencies.
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/readme/pack-flow-en-dark.svg">
     <source media="(prefers-color-scheme: light)" srcset="assets/readme/pack-flow-en-light.svg">
-    <img src="assets/readme/pack-flow-en-dark.svg" alt="3-step builder workflow diagram: 1. THINK & TALK (dopamine-talk) kills post-RL tics -> 2. SHIP & ANNOUNCE (dopamine-changelog) translates raw git diffs into user impact f'(x) -> 3. WIN STARS IN 5s (dopamine-readme) turns dry docs into living visual showcases." width="840">
+    <img src="assets/readme/pack-flow-en-dark.svg" alt="3-step builder workflow diagram connecting three obsidian crystal-glass skill cards with right arrows: Card 1 [01 · THINK &amp; TALK] 'dopamine-talk' — Kills post-RL tics: hedging, AI slop, AST dumps &amp; critic-gate syndrome -> Card 2 [02 · SHIP &amp; ANNOUNCE] 'dopamine-changelog' — Translates raw git diffs into user impact f'(x), Before -> After &amp; CVE facts -> Card 3 [03 · WIN STARS IN 5s] 'dopamine-readme' — Turns dry docs into living visual showcases built for the 5-second scroll test." width="840">
   </picture>
 </p>
 
@@ -199,7 +200,7 @@ Both editions install cleanly under the exact same skill names (`dopamine-talk`,
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/readme/strip-reflexes-en-dark.svg">
     <source media="(prefers-color-scheme: light)" srcset="assets/readme/strip-reflexes-en-light.svg">
-    <img src="assets/readme/strip-reflexes-en-dark.svg" alt="Section divider: ANATOMY OF THE FIX - Five post-training RLVR habits stripped at generation time" width="840">
+    <img src="assets/readme/strip-reflexes-en-dark.svg" alt="Section divider banner: 'ANATOMY OF THE FIX' — Five post-training RLVR habits stripped at generation time." width="840">
   </picture>
 </p>
 

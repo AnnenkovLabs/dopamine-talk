@@ -3,8 +3,10 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="../../assets/readme/hero-ru-dark.svg">
   <source media="(prefers-color-scheme: light)" srcset="../../assets/readme/hero-ru-light.svg">
-  <img src="../../assets/readme/hero-ru-dark.svg" alt="Dopamine Talk: Декомпрессия ИИ-агентов после жёсткого RLVR — живой ум, скорость и кураж." width="840">
+  <img src="../../assets/readme/hero-ru-dark.svg" alt="Шапка-баннер: 3D-иконка из чёрного хрустального стекла с рубиновым преломлением по левой грани и хромированной эмблемой облака диалога со звуковыми полосами, рядом заголовок «Dopamine Talk» и слоган «Декомпрессия ИИ-агентов после жёсткого RLVR — живой ум, скорость и кураж.»" width="840">
 </picture>
+
+<p><a href="../../README.md">English</a> · <strong>Русский</strong></p>
 
 <p>
   <a href="CHANGELOG.ru.md"><img src="https://img.shields.io/badge/%D1%80%D0%B5%D0%BB%D0%B8%D0%B7-v1.0.0-ff6b4a?style=flat-square" alt="Релиз: v1.0.0"></a>
@@ -12,7 +14,6 @@
   <a href="#три-скилла-в-паке"><img src="https://img.shields.io/badge/%D1%81%D0%BA%D0%B8%D0%BB%D0%BB%D1%8B-3-4fd1a5?style=flat-square" alt="3 скилла в паке"></a>
   <a href="../../INSTALL.md"><img src="https://img.shields.io/badge/%D0%B0%D0%B3%D0%B5%D0%BD%D1%82%D1%8B-20%2B-24242b?style=flat-square" alt="Работает в 20+ агентах"></a>
   <a href="../../LICENSE"><img src="https://img.shields.io/badge/%D0%BB%D0%B8%D1%86%D0%B5%D0%BD%D0%B7%D0%B8%D1%8F-MIT-6c7382?style=flat-square" alt="Лицензия MIT"></a>
-  <a href="../../README.md"><img src="https://img.shields.io/badge/lang-English-5865F2?style=flat-square" alt="Read in English"></a>
 </p>
 
 <p><strong>Фронтирные модели стали умнее, но общаться с ними почему-то стало невыносимо душно.</strong><br>
@@ -23,7 +24,7 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="../../assets/readme/glance-ru-dark.svg">
   <source media="(prefers-color-scheme: light)" srcset="../../assets/readme/glance-ru-light.svg">
-  <img src="../../assets/readme/glance-ru-dark.svg" alt="Пак Dopamine Talk за 5 секунд: 3 скилла (Диалог, README, Чейнджлог), 2 версии (Русский + Western EN), 0 зависимостей (чистый Markdown, любая модель), 20+ агентов (умный инсталлер и плагины)." width="840">
+  <img src="../../assets/readme/glance-ru-dark.svg" alt="Инфографика «Пак Dopamine Talk за 5 секунд» (4 стеклянные KPI-карточки и общая 3-строчная панель скиллов). Карточки KPI: (1) «3 скилла» — Диалог, README, Чейнджлог; (2) «2 версии» — Русский + Western EN; (3) «0 зависимостей» — Чистый Markdown, любая модель; (4) «20+ агентов» — Умный инсталлер и плагины. Строки панели скиллов: DOPAMINE TALK — Вырубает критика-гейты, пересказ кода, Runglish и трусливые дисклеймеры; DOPAMINE README — Тест 5 секунд, стеклянная графика под обе темы, лестница «Ах!»-приоритетов; DOPAMINE CHANGELOG — Превращает git diff в пользу f'(x), таблицы Было -> Стало и точные CVE." width="840">
 </picture>
 
 </div>
@@ -56,7 +57,7 @@
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="../../assets/readme/before-after-ru-dark.svg">
     <source media="(prefers-color-scheme: light)" srcset="../../assets/readme/before-after-ru-light.svg">
-    <img src="../../assets/readme/before-after-ru-dark.svg" alt="Живой A/B-прогон одной модели на одном диффе релиза: без скилла агент перечисляет SpriteBatcher.ts, SchemaLoader.ts, Logger.ts и 38 unit-тестов, отказывается назвать цифры до бенчмарка и вставляет Runglish (frame time, bit-packing, head-of-line blocking). С Dopamine Talk — чистый русский, ноль сантехники, расчёт В теории (252 000 -> 0 объектов/с, -90% трафика, ровные 60 FPS) и идея мгновенных реплеев боя из кольцевого буфера дельт." width="840">
+    <img src="../../assets/readme/before-after-ru-dark.svg" alt="Схема живого A/B-сравнения одной модели на одном диффе релиза. Общий запрос в верхней плашке: Живой A/B (одна модель и дифф): «Объясни плюсы релиза, прикинь выигрыш (бенчмарка нет), предложи 1 смелый апгрейд». Левая карточка из дымчатого стекла [БЕЗ СКИЛЛА · РЕАЛЬНЫЙ ОТВЕТ МОДЕЛИ]: Рендер (SpriteBatcher.ts) и сеть (StateSync.ts); Надёжность (SchemaLoader.ts, Logger.ts): схема v3, структурированное логирование и 38 unit-тестов; Ожидаемый выигрыш (до теста на 24 игроках): Точные цифры подтвердит бенчмарк, ориентировочно стабилизация 99-го перцентиля frame time...; Идея: bit-packing поверх unreliable WebRTC DataChannel, чтобы убрать head-of-line blocking. Теги внизу: Имена файлов, 38 тестов, Нет цифр, Runglish. Правая карточка из хрусталя с рубиновой гранью [С DOPAMINE TALK · РЕАЛЬНЫЙ ОТВЕТ]: Релиз вычистил два главных тормоза в бою: буферы в одном пуле и бинарные дельты по обзору. В теории (в замесе на 24 игрока): Аллокации 252 000 -> 0 объектов/с, GC уходит; Сеть -90% трафика (в 10-15x легче, без JSON); Картинка ровные 60 FPS вместо рывков. На следующий релиз: мгновенные реплеи боя из буфера дельт (меньше 1 МБ/мин), без нагрузки на сервер. Теги внизу: Без сантехники, Чистый русский, Было -> Стало, Фича-огонь." width="840">
   </picture>
 </p>
 
@@ -133,7 +134,7 @@ Dopamine Talk родился не из сухой теории промпт-ин
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="../../assets/readme/strip-skills-ru-dark.svg">
     <source media="(prefers-color-scheme: light)" srcset="../../assets/readme/strip-skills-ru-light.svg">
-    <img src="../../assets/readme/strip-skills-ru-dark.svg" alt="Разделитель раздела: ТРИ СКИЛЛА — Диалог, чейнджлоги и README — единый стиль без воды" width="840">
+    <img src="../../assets/readme/strip-skills-ru-dark.svg" alt="Разделитель раздела: «ТРИ СКИЛЛА» — Диалог, чейнджлоги и README — единый стиль без воды." width="840">
   </picture>
 </p>
 
@@ -145,7 +146,7 @@ Dopamine Talk родился не из сухой теории промпт-ин
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="../../assets/readme/pack-flow-ru-dark.svg">
     <source media="(prefers-color-scheme: light)" srcset="../../assets/readme/pack-flow-ru-light.svg">
-    <img src="../../assets/readme/pack-flow-ru-dark.svg" alt="Три этапа работы пака: 1. ДУМАТЬ И ОБЩАТЬСЯ (dopamine-talk) вырубает 6 рефлексов RL -> 2. КАТИТЬ РЕЛИЗЫ (dopamine-changelog) переводит git diff в пользу f'(x) -> 3. ЗАБИРАТЬ ЗВЁЗДЫ (dopamine-readme) собирает живую витрину под тест 5 секунд." width="840">
+    <img src="../../assets/readme/pack-flow-ru-dark.svg" alt="Схема цикла продукта из 3 стеклянных карточек скиллов, соединённых стрелками: Карточка 1 [01 · ДУМАТЬ И ОБЩАТЬСЯ] «dopamine-talk» — Вырубает 6 рефлексов RL: дисклеймеры, Runglish, пересказ кода и критик-гейты -> Карточка 2 [02 · КАТИТЬ РЕЛИЗЫ] «dopamine-changelog» — Переводит сухой git diff в пользу для людей f'(x), Было -> Стало и точные CVE -> Карточка 3 [03 · ЗАБИРАТЬ ЗВЁЗДЫ] «dopamine-readme» — Делает живую витрину под тест 5 секунд с графикой под тёмную и светлую тему." width="840">
   </picture>
 </p>
 
@@ -196,7 +197,7 @@ Dopamine Talk родился не из сухой теории промпт-ин
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="../../assets/readme/strip-reflexes-ru-dark.svg">
     <source media="(prefers-color-scheme: light)" srcset="../../assets/readme/strip-reflexes-ru-light.svg">
-    <img src="../../assets/readme/strip-reflexes-ru-dark.svg" alt="Разделитель раздела: АНАТОМИЯ ПОЛОМКИ — Шесть деформаций пост-трейнинга, которые вырубаются на корню" width="840">
+    <img src="../../assets/readme/strip-reflexes-ru-dark.svg" alt="Разделитель раздела: «АНАТОМИЯ ПОЛОМКИ» — Шесть деформаций пост-трейнинга, которые вырубаются на корню." width="840">
   </picture>
 </p>
 
