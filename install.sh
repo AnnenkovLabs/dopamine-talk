@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
 # Dopamine Talk Interactive Installer
 # Supports both local clones (`./install.sh`) and one-line remote installs:
-#   curl -fsSL https://raw.githubusercontent.com/AnnenkovLabs/dopamine-talk/main/install.sh | bash
+#   curl -fsSL https://dopamine.annenkov.me/install.sh | bash
+#   curl -fsSL https://dopamine.annenkov.me/install.sh | bash -s -- --lang ru
 #
 # Quick non-interactive examples:
 #   ./install.sh --lang en --all-agents --yes
 #   ./install.sh --lang ru --claude --codex --yes
 #   ./install.sh --lang ru --skills talk,readme --claude --force --yes
 #   ./install.sh --status
-#   ./install.sh --uninstall --all-agents --yes
+#   ./install.sh --uninstall --yes
 #
 # Compatible with Bash 3.2+ (macOS, Linux, WSL, Windows Git Bash). Zero dependencies.
 
@@ -17,7 +18,11 @@ set -euo pipefail
 REPO_SLUG="AnnenkovLabs/dopamine-talk"
 REPO_URL="https://github.com/${REPO_SLUG}.git"
 TARBALL_URL="https://github.com/${REPO_SLUG}/archive/refs/heads/main.tar.gz"
+SHORT_URL="https://dopamine.annenkov.me/install.sh"
 MANAGED_CLONE_DIR="${DOPAMINE_HOME:-$HOME/.local/share/dopamine-talk}"
+
+MARKER_START="<!-- dopamine-talk:start -->"
+MARKER_END="<!-- dopamine-talk:end -->"
 
 WINDOWS=0
 case "$(uname -s 2>/dev/null || echo Unknown)" in
@@ -51,12 +56,13 @@ if [[ -n "$SCRIPT_PATH" && -f "$SCRIPT_PATH" ]]; then
 fi
 
 # CLI state
-MODE="install"      # install | uninstall | list | status
-EDITION=""          # en | ru
-METHOD=""           # link | copy
+MODE="install"        # install | uninstall | list | status
+EDITION=""            # en | ru
+METHOD=""             # link | copy
 ASSUME_YES=0
 FORCE=0
-INSTALL_RULES=0
+GLOBAL_RULES="ask"    # ask | yes | no (always-on global agent rules)
+INSTALL_LOCAL_RULES=0
 RULES_DIR="."
 SELECTED_SKILLS=()
 TARGETS=()
@@ -66,38 +72,43 @@ trap 'if [[ -n "${CLEANUP_TMP:-}" && -d "${CLEANUP_TMP:-}" ]]; then rm -rf "$CLE
 
 print_help() {
   cat <<'EOF'
-Dopamine Talk Installer — install EN (Western) or RU edition across 20+ AI agents.
+Dopamine Talk Installer — install EN or RU skills + always-on rules across 20+ AI agents.
 
 Usage:
-  ./install.sh                          Launch interactive setup wizard
-  ./install.sh [options] [skill...]     Run directly with flags
+  curl -fsSL https://dopamine.annenkov.me/install.sh | bash
+  ./install.sh [options] [skill...]
 
 Options:
   --lang en|ru          Skill edition:
-                          en = Western English (5 post-RL fixes, zero AI slop)
-                          ru = Russian native (all 6 reflexes + anti-Runglish)
+                          en = Western English (sharp, zero AI slop)
+                          ru = Native Russian (живой русский, без Runglish)
   --skills LIST         Comma-separated skills: all, talk, readme, changelog
                         (or full names: dopamine-talk, dopamine-readme, dopamine-changelog)
   --link                Install via symlinks (auto-updates on git pull)
   --copy                Install standalone copies
+  --global-rules        Enable always-on global rules for selected agents (default with --yes)
+  --no-global-rules     Install SKILL.md files only (do not touch global CLAUDE.md/AGENTS.md)
+  --rules [DIR]         Also copy standalone AGENTS.md into project DIR (default: .)
   --force, -f           Overwrite existing Dopamine Talk installs (great for EN <-> RU switch)
-  --rules [DIR]         Also install matching-language AGENTS.md into DIR (default: .)
   -y, --yes             Skip interactive prompts and use detected/specified defaults
-  --status              Show which edition (EN/RU) and skills are currently installed
+  --status              Show installed edition (EN/RU), skills, and active always-on rules
   --list                List available skills across EN and RU editions
-  --uninstall           Remove installed Dopamine Talk skills from selected/all targets
+  --uninstall           Cleanly remove installed skills and marked always-on rule blocks
   -h, --help            Show this help message
 
 Target Agent Shortcuts:
-  --agents              ~/.agents/skills (Antigravity, OpenCode, Cline, Pi, DSH, Command Code)
+  --agents              ~/.agents/skills (Antigravity, OpenCode, Cline, Pi, Command Code)
   --claude              ~/.claude/skills (Claude Code)
   --codex               ~/.codex/skills (OpenAI Codex)
-  --gemini              ~/.gemini/config/skills (Gemini CLI / Antigravity config)
+  --gemini              ~/.gemini/config/skills (Gemini CLI / Antigravity)
+  --antigravity         ~/.agents/skills + ~/.gemini/config/skills
   --cursor              ~/.cursor/skills (Cursor)
+  --windsurf            ~/.codeium/windsurf/skills (Windsurf)
+  --copilot             ~/.copilot/skills (GitHub Copilot)
   --opencode            ~/.config/opencode/skills (OpenCode)
   --kiro                ~/.kiro/skills (Kiro)
   --dir PATH            Install into any custom skills directory
-  --all-agents          Universal + Claude Code + Codex + Gemini CLI
+  --all-agents          Universal + Claude Code + Codex + Gemini CLI + Cursor + Windsurf + Copilot
 EOF
 }
 
@@ -169,21 +180,28 @@ while [[ $# -gt 0 ]]; do
     --gemini)      add_target_unique "$HOME/.gemini/config/skills" ;;
     --antigravity) add_target_unique "$HOME/.agents/skills"; add_target_unique "$HOME/.gemini/config/skills" ;;
     --cursor)      add_target_unique "$HOME/.cursor/skills" ;;
+    --windsurf)    add_target_unique "$HOME/.codeium/windsurf/skills" ;;
+    --copilot)     add_target_unique "$HOME/.copilot/skills" ;;
     --opencode)    add_target_unique "$HOME/.config/opencode/skills" ;;
     --kiro)        add_target_unique "$HOME/.kiro/skills" ;;
     --all-agents)
       add_target_unique "$HOME/.agents/skills"
       add_target_unique "$HOME/.claude/skills"
       add_target_unique "$HOME/.codex/skills"
-      add_target_unique "$HOME/.gemini/config/skills" ;;
+      add_target_unique "$HOME/.gemini/config/skills"
+      add_target_unique "$HOME/.cursor/skills"
+      add_target_unique "$HOME/.codeium/windsurf/skills"
+      add_target_unique "$HOME/.copilot/skills" ;;
     --dir)
       [[ $# -ge 2 ]] || { echo "${RED}error:${RESET} --dir requires a directory path" >&2; exit 2; }
       add_target_unique "$2"
       shift ;;
-    --link|--symlink) METHOD="link" ;;
-    --copy)           METHOD="copy" ;;
+    --link|--symlink)  METHOD="link" ;;
+    --copy)            METHOD="copy" ;;
+    --global-rules)    GLOBAL_RULES="yes" ;;
+    --no-global-rules) GLOBAL_RULES="no" ;;
     --rules)
-      INSTALL_RULES=1
+      INSTALL_LOCAL_RULES=1
       if [[ $# -ge 2 && "$2" != -* ]]; then
         RULES_DIR="$2"
         shift
@@ -232,19 +250,91 @@ prompt_line() {
 detect_edition_from_file() {
   local md="$1"
   [[ -f "$md" ]] || { printf 'unknown'; return; }
-  if grep -q 'Деактивирует\|Пишет и переписывает\|Включает режим' "$md" 2>/dev/null; then
+  if grep -q 'Деактивирует\|Пишет и переписывает\|Включает режим\|Всегда активные правила\|Пять главных правил' "$md" 2>/dev/null; then
     printf 'RU'
   else
     printf 'EN'
   fi
 }
 
+# Portable POSIX awk helpers for marker-scoped always-on global rules
+# Never overwrites or damages user's own rules outside markers.
+upsert_marked_block() {
+  local dst="$1"
+  local src="$2"
+  mkdir -p "$(dirname "$dst")"
+  local tmp_out
+  tmp_out="$(mktemp)"
+
+  if [[ -f "$dst" ]] && grep -Fq "$MARKER_START" "$dst" 2>/dev/null && grep -Fq "$MARKER_END" "$dst" 2>/dev/null; then
+    awk -v s="$MARKER_START" -v e="$MARKER_END" -v rf="$src" '
+      BEGIN { skipping = 0 }
+      $0 == s {
+        print s
+        while ((getline line < rf) > 0) print line
+        close(rf)
+        print e
+        skipping = 1
+        next
+      }
+      skipping && $0 == e { skipping = 0; next }
+      !skipping { print }
+    ' "$dst" > "$tmp_out"
+  else
+    if [[ -f "$dst" && -s "$dst" ]]; then
+      cat "$dst" > "$tmp_out"
+      printf '\n\n' >> "$tmp_out"
+    fi
+    printf '%s\n' "$MARKER_START" >> "$tmp_out"
+    cat "$src" >> "$tmp_out"
+    printf '\n%s\n' "$MARKER_END" >> "$tmp_out"
+  fi
+
+  mv "$tmp_out" "$dst"
+}
+
+remove_marked_block() {
+  local dst="$1"
+  [[ -f "$dst" ]] || return 1
+  grep -Fq "$MARKER_START" "$dst" 2>/dev/null || return 1
+  local tmp_out
+  tmp_out="$(mktemp)"
+  awk -v s="$MARKER_START" -v e="$MARKER_END" '
+    BEGIN { skipping = 0 }
+    $0 == s { skipping = 1; next }
+    skipping && $0 == e { skipping = 0; next }
+    !skipping { print }
+  ' "$dst" > "$tmp_out"
+  if [[ -z "$(tr -d '[:space:]' < "$tmp_out")" ]]; then
+    rm -f "$tmp_out" "$dst"
+  else
+    mv "$tmp_out" "$dst"
+  fi
+  return 0
+}
+
+write_cursor_mdc() {
+  local dst="$1"
+  local src="$2"
+  mkdir -p "$(dirname "$dst")"
+  {
+    printf '%s\n' '---'
+    printf '%s\n' 'description: Dopamine Talk — Always-On Communication Rules'
+    printf '%s\n' 'alwaysApply: true'
+    printf '%s\n\n' '---'
+    cat "$src"
+    printf '\n'
+  } > "$dst"
+}
+
 KNOWN_AGENT_LABELS=(
-  "Universal (~/.agents/skills — Antigravity, OpenCode, Cline, Pi, DSH)"
+  "Universal (~/.agents/skills — Antigravity, OpenCode, Cline, Pi)"
   "Claude Code (~/.claude/skills)"
   "OpenAI Codex (~/.codex/skills)"
   "Gemini CLI / Antigravity (~/.gemini/config/skills)"
   "Cursor (~/.cursor/skills)"
+  "Windsurf (~/.codeium/windsurf/skills)"
+  "GitHub Copilot (~/.copilot/skills)"
   "OpenCode (~/.config/opencode/skills)"
   "Kiro (~/.kiro/skills)"
 )
@@ -254,6 +344,8 @@ KNOWN_AGENT_DIRS=(
   "$HOME/.codex/skills"
   "$HOME/.gemini/config/skills"
   "$HOME/.cursor/skills"
+  "$HOME/.codeium/windsurf/skills"
+  "$HOME/.copilot/skills"
   "$HOME/.config/opencode/skills"
   "$HOME/.kiro/skills"
 )
@@ -263,15 +355,83 @@ KNOWN_AGENT_PROBES=(
   "$HOME/.codex"
   "$HOME/.gemini"
   "$HOME/.cursor"
+  "$HOME/.codeium"
+  "$HOME/.copilot"
   "$HOME/.config/opencode"
   "$HOME/.kiro"
 )
+
+# Standalone rule files owned 100% by Dopamine Talk
+KNOWN_OWNED_RULE_FILES=(
+  "$HOME/.gemini/config/rules/dopamine-talk.md"
+  "$HOME/.cursor/rules/dopamine-talk.mdc"
+  "$HOME/.kiro/steering/dopamine-talk.md"
+)
+# Shared global rule files where we only touch <!-- dopamine-talk:start/end -->
+KNOWN_MARKED_RULE_FILES=(
+  "$HOME/.agents/AGENTS.md"
+  "$HOME/.claude/CLAUDE.md"
+  "$HOME/.codex/AGENTS.md"
+  "$HOME/.gemini/GEMINI.md"
+  "$HOME/.codeium/windsurf/memories/global_rules.md"
+  "$HOME/.copilot/copilot-instructions.md"
+  "$HOME/.config/opencode/AGENTS.md"
+)
+
+install_global_rule_for_target() {
+  local target="$1"
+  local rules_src="$2"
+  local ed_label="$3"
+  case "$target" in
+    "$HOME/.agents/skills")
+      upsert_marked_block "$HOME/.agents/AGENTS.md" "$rules_src"
+      echo "  ${GREEN}✓${RESET} rule     $HOME/.agents/AGENTS.md ${DIM}[always-on · ${ed_label}]${RESET}"
+      return 0 ;;
+    "$HOME/.claude/skills")
+      upsert_marked_block "$HOME/.claude/CLAUDE.md" "$rules_src"
+      echo "  ${GREEN}✓${RESET} rule     $HOME/.claude/CLAUDE.md ${DIM}[always-on · ${ed_label}]${RESET}"
+      return 0 ;;
+    "$HOME/.codex/skills")
+      upsert_marked_block "$HOME/.codex/AGENTS.md" "$rules_src"
+      echo "  ${GREEN}✓${RESET} rule     $HOME/.codex/AGENTS.md ${DIM}[always-on · ${ed_label}]${RESET}"
+      return 0 ;;
+    "$HOME/.gemini/config/skills")
+      upsert_marked_block "$HOME/.gemini/GEMINI.md" "$rules_src"
+      mkdir -p "$HOME/.gemini/config/rules"
+      cp "$rules_src" "$HOME/.gemini/config/rules/dopamine-talk.md"
+      echo "  ${GREEN}✓${RESET} rule     $HOME/.gemini/GEMINI.md ${DIM}[always-on · ${ed_label}]${RESET}"
+      echo "  ${GREEN}✓${RESET} rule     $HOME/.gemini/config/rules/dopamine-talk.md ${DIM}[always-on · ${ed_label}]${RESET}"
+      return 0 ;;
+    "$HOME/.cursor/skills")
+      write_cursor_mdc "$HOME/.cursor/rules/dopamine-talk.mdc" "$rules_src"
+      echo "  ${GREEN}✓${RESET} rule     $HOME/.cursor/rules/dopamine-talk.mdc ${DIM}[alwaysApply · ${ed_label}]${RESET}"
+      return 0 ;;
+    "$HOME/.codeium/windsurf/skills")
+      upsert_marked_block "$HOME/.codeium/windsurf/memories/global_rules.md" "$rules_src"
+      echo "  ${GREEN}✓${RESET} rule     $HOME/.codeium/windsurf/memories/global_rules.md ${DIM}[always-on · ${ed_label}]${RESET}"
+      return 0 ;;
+    "$HOME/.copilot/skills")
+      upsert_marked_block "$HOME/.copilot/copilot-instructions.md" "$rules_src"
+      echo "  ${GREEN}✓${RESET} rule     $HOME/.copilot/copilot-instructions.md ${DIM}[always-on · ${ed_label}]${RESET}"
+      return 0 ;;
+    "$HOME/.config/opencode/skills")
+      upsert_marked_block "$HOME/.config/opencode/AGENTS.md" "$rules_src"
+      echo "  ${GREEN}✓${RESET} rule     $HOME/.config/opencode/AGENTS.md ${DIM}[always-on · ${ed_label}]${RESET}"
+      return 0 ;;
+    "$HOME/.kiro/skills")
+      mkdir -p "$HOME/.kiro/steering"
+      cp "$rules_src" "$HOME/.kiro/steering/dopamine-talk.md"
+      echo "  ${GREEN}✓${RESET} rule     $HOME/.kiro/steering/dopamine-talk.md ${DIM}[always-on · ${ed_label}]${RESET}"
+      return 0 ;;
+  esac
+  return 1
+}
 
 # --- MODE: STATUS ---
 if [[ "$MODE" == "status" ]]; then
   echo ""
   echo "${BOLD}${CORAL}Dopamine Talk — Installed Status${RESET}"
-  echo "${DIM}Checking standard agent skill directories...${RESET}"
+  echo "${DIM}Checking skills and active always-on rules...${RESET}"
   echo ""
   found_any=0
   for i in "${!KNOWN_AGENT_DIRS[@]}"; do
@@ -292,8 +452,24 @@ if [[ "$MODE" == "status" ]]; then
       fi
     done
   done
+
+  for rf in "${KNOWN_OWNED_RULE_FILES[@]}"; do
+    if [[ -f "$rf" ]]; then
+      found_any=1
+      ed="$(detect_edition_from_file "$rf")"
+      printf '  %s✓%s %-20s %s[%s · always-on]%s  %s\n' "$GREEN" "$RESET" "global-rule" "$CYAN" "$ed" "$RESET" "$rf"
+    fi
+  done
+  for rf in "${KNOWN_MARKED_RULE_FILES[@]}"; do
+    if [[ -f "$rf" ]] && grep -Fq "$MARKER_START" "$rf" 2>/dev/null; then
+      found_any=1
+      ed="$(detect_edition_from_file "$rf")"
+      printf '  %s✓%s %-20s %s[%s · always-on]%s  %s\n' "$GREEN" "$RESET" "global-rule" "$CYAN" "$ed" "$RESET" "$rf"
+    fi
+  done
+
   if [[ $found_any -eq 0 ]]; then
-    echo "  ${DIM}No Dopamine Talk skills currently installed.${RESET}"
+    echo "  ${DIM}No Dopamine Talk skills or global rules currently installed.${RESET}"
   fi
   echo ""
   exit 0
@@ -305,14 +481,14 @@ if [[ "$MODE" == "list" ]]; then
   echo "${BOLD}${CORAL}Available Dopamine Talk Skills${RESET}"
   echo ""
   echo "  ${BOLD}English (Western edition — skills/)${RESET}"
-  printf '    %-22s %s\n' "dopamine-talk"      "skills/dopamine-talk       (5 post-RL fixes, zero corporate AI slop)"
+  printf '    %-22s %s\n' "dopamine-talk"      "skills/dopamine-talk       (sharp dialogue, zero caveats or AI slop)"
   printf '    %-22s %s\n' "dopamine-readme"    "skills/dopamine-readme     (5-second visual GitHub showcases)"
   printf '    %-22s %s\n' "dopamine-changelog" "skills/dopamine-changelog  (user-impact f'(x) release notes)"
   echo ""
   echo "  ${BOLD}Русский (Оригинальная версия — skills-ru/)${RESET}"
-  printf '    %-22s %s\n' "dopamine-talk"      "skills-ru/dopamine-talk       (все 6 рефлексов RLVR + анти-Runglish)"
-  printf '    %-22s %s\n' "dopamine-readme"    "skills-ru/dopamine-readme     (живые витрины README под тест 5 секунд)"
-  printf '    %-22s %s\n' "dopamine-changelog" "skills-ru/dopamine-changelog  (чейнджлоги пользы f'(x) и точные CVE)"
+  printf '    %-22s %s\n' "dopamine-talk"      "skills-ru/dopamine-talk       (живое общение без духоты и Runglish)"
+  printf '    %-22s %s\n' "dopamine-readme"    "skills-ru/dopamine-readme     (витрины README под правило 5 секунд)"
+  printf '    %-22s %s\n' "dopamine-changelog" "skills-ru/dopamine-changelog  (понятные чейнджлоги и точные CVE)"
   echo ""
   exit 0
 fi
@@ -342,7 +518,9 @@ remove_entry() {
 
 # --- MODE: UNINSTALL ---
 if [[ "$MODE" == "uninstall" ]]; then
+  all_uninstall=0
   if [[ ${#TARGETS[@]} -eq 0 ]]; then
+    all_uninstall=1
     for d in "${KNOWN_AGENT_DIRS[@]}"; do
       add_target_unique "$d"
     done
@@ -367,6 +545,23 @@ if [[ "$MODE" == "uninstall" ]]; then
       fi
     done
   done
+
+  if [[ $all_uninstall -eq 1 ]]; then
+    for rf in "${KNOWN_OWNED_RULE_FILES[@]}"; do
+      if [[ -f "$rf" ]]; then
+        rm -f "$rf"
+        echo "  ${GREEN}✓${RESET} removed  $rf"
+        removed=$((removed + 1))
+      fi
+    done
+    for rf in "${KNOWN_MARKED_RULE_FILES[@]}"; do
+      if remove_marked_block "$rf"; then
+        echo "  ${GREEN}✓${RESET} cleaned  $rf"
+        removed=$((removed + 1))
+      fi
+    done
+  fi
+
   if [[ $removed -eq 0 ]]; then
     echo "  ${DIM}Nothing to remove in selected directories.${RESET}"
   fi
@@ -375,14 +570,13 @@ if [[ "$MODE" == "uninstall" ]]; then
 fi
 
 # --- MODE: INSTALL ---
-# Interactive wizard header
-if [[ $CAN_PROMPT -eq 1 && ( -z "$EDITION" || ${#TARGETS[@]} -eq 0 || ${#SELECTED_SKILLS[@]} -eq 0 || -z "$METHOD" ) ]]; then
+if [[ $CAN_PROMPT -eq 1 && ( -z "$EDITION" || ${#TARGETS[@]} -eq 0 || ${#SELECTED_SKILLS[@]} -eq 0 || -z "$METHOD" || "$GLOBAL_RULES" == "ask" ) ]]; then
   echo ""
   echo "${BOLD}${CORAL}━━━ Dopamine Talk Installer ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}"
   if [[ -n "$LOCAL_REPO" ]]; then
     echo "${DIM}Source: local clone (${LOCAL_REPO})${RESET}"
   else
-    echo "${DIM}Source: github.com/${REPO_SLUG} (remote)${RESET}"
+    echo "${DIM}Source: dopamine.annenkov.me / github.com/${REPO_SLUG}${RESET}"
   fi
   echo ""
 fi
@@ -390,14 +584,14 @@ fi
 # Step 1: Choose Language Edition
 if [[ -z "$EDITION" ]]; then
   default_ed="1"
-  case "${LANG:-}" in
-    ru_*|uk_*|be_*) default_ed="2" ;;
+  case "${LANG:-}${LC_ALL:-}" in
+    *ru_*|*uk_*|*be_*|*kk_*) default_ed="2" ;;
   esac
 
   if [[ $CAN_PROMPT -eq 1 ]]; then
-    echo "${BOLD}1. Choose skill edition / Выбери версию скиллов:${RESET}"
-    echo "   ${AMBER}1)${RESET} ${BOLD}English${RESET}  ${DIM}(Western edition — 5 post-RL fixes, zero corporate AI slop)${RESET}"
-    echo "   ${AMBER}2)${RESET} ${BOLD}Русский${RESET}  ${DIM}(Оригинальная версия — 6 рефлексов RLVR + защита от Runglish)${RESET}"
+    echo "${BOLD}1. Choose edition / Выбери язык скиллов:${RESET}"
+    echo "   ${AMBER}1)${RESET} ${BOLD}English${RESET}  ${DIM}(Western English — sharp, zero AI slop)${RESET}"
+    echo "   ${AMBER}2)${RESET} ${BOLD}Русский${RESET}  ${DIM}(Живой русский — без духоты и англо-русской каши)${RESET}"
     ans="$(prompt_line "   Pick [1/2] (default ${default_ed}): ")"
     ans="${ans:-$default_ed}"
     case "$(lower "$ans")" in
@@ -416,15 +610,15 @@ if [[ ${#SELECTED_SKILLS[@]} -eq 0 ]]; then
   if [[ $CAN_PROMPT -eq 1 ]]; then
     if [[ "$EDITION" == "ru" ]]; then
       echo "${BOLD}2. Какие скиллы поставить?${RESET}"
-      echo "   ${AMBER}1)${RESET} ${BOLD}dopamine-talk${RESET}       ${DIM}— декомпрессия после RLVR и живой диалог${RESET}"
-      echo "   ${AMBER}2)${RESET} ${BOLD}dopamine-readme${RESET}     ${DIM}— живые витрины README под тест 5 секунд${RESET}"
-      echo "   ${AMBER}3)${RESET} ${BOLD}dopamine-changelog${RESET}  ${DIM}— чейнджлоги пользы f'(x) и точные CVE${RESET}"
+      echo "   ${AMBER}1)${RESET} ${BOLD}dopamine-talk${RESET}       ${DIM}— живое общение без духоты и оговорок${RESET}"
+      echo "   ${AMBER}2)${RESET} ${BOLD}dopamine-readme${RESET}     ${DIM}— README на GitHub под правило 5 секунд${RESET}"
+      echo "   ${AMBER}3)${RESET} ${BOLD}dopamine-changelog${RESET}  ${DIM}— понятные списки обновлений для людей${RESET}"
       ans="$(prompt_line "   Номера через запятую или Enter для всех трёх [all]: ")"
     else
       echo "${BOLD}2. Which skills do you want?${RESET}"
-      echo "   ${AMBER}1)${RESET} ${BOLD}dopamine-talk${RESET}       ${DIM}— post-RL decompression & sharp engineering voice${RESET}"
-      echo "   ${AMBER}2)${RESET} ${BOLD}dopamine-readme${RESET}     ${DIM}— living GitHub storefronts built for 5-second scroll${RESET}"
-      echo "   ${AMBER}3)${RESET} ${BOLD}dopamine-changelog${RESET}  ${DIM}— user-impact f'(x) release notes & CVE clarity${RESET}"
+      echo "   ${AMBER}1)${RESET} ${BOLD}dopamine-talk${RESET}       ${DIM}— sharp, high-drive chat with zero caveats${RESET}"
+      echo "   ${AMBER}2)${RESET} ${BOLD}dopamine-readme${RESET}     ${DIM}— 5-second visual GitHub showcases${RESET}"
+      echo "   ${AMBER}3)${RESET} ${BOLD}dopamine-changelog${RESET}  ${DIM}— user-impact release notes & CVE clarity${RESET}"
       ans="$(prompt_line "   Numbers separated by commas, or Enter for all 3 [all]: ")"
     fi
     ans="$(printf '%s' "${ans:-all}" | tr -d '[:space:]')"
@@ -462,7 +656,7 @@ if [[ ${#TARGETS[@]} -eq 0 ]]; then
 
   if [[ $CAN_PROMPT -eq 1 ]]; then
     if [[ "$EDITION" == "ru" ]]; then
-      echo "${BOLD}3. Куда установить? (найденные среды отмечены зелёным)${RESET}"
+      echo "${BOLD}3. В какие агенты поставить? (найденные на компьютере отмечены зелёным)${RESET}"
     else
       echo "${BOLD}3. Where should we install? (detected agents are highlighted)${RESET}"
     fi
@@ -475,21 +669,21 @@ if [[ ${#TARGETS[@]} -eq 0 ]]; then
       echo "   ${AMBER}${num})${RESET} ${KNOWN_AGENT_LABELS[$i]}${tag}"
     done
     if [[ "$EDITION" == "ru" ]]; then
-      echo "   ${AMBER}8)${RESET} Свой путь к папке..."
+      echo "   ${AMBER}10)${RESET} Свой путь к папке..."
       ans="$(prompt_line "   Номера через запятую, 'all' или Enter для [${default_agents}]: ")"
     else
-      echo "   ${AMBER}8)${RESET} Custom directory path..."
+      echo "   ${AMBER}10)${RESET} Custom directory path..."
       ans="$(prompt_line "   Numbers separated by commas, 'all', or Enter for [${default_agents}]: ")"
     fi
     ans="$(printf '%s' "${ans:-$default_agents}" | tr -d '[:space:]')"
     if [[ "$(lower "$ans")" == "all" ]]; then
-      for i in 0 1 2 3; do add_target_unique "${KNOWN_AGENT_DIRS[$i]}"; done
+      for i in 0 1 2 3 4 5 6; do add_target_unique "${KNOWN_AGENT_DIRS[$i]}"; done
     else
       IFS=',' read -r -a _picks <<< "$ans"
       for pk in "${_picks[@]}"; do
         case "$pk" in
-          1|2|3|4|5|6|7) add_target_unique "${KNOWN_AGENT_DIRS[$((pk - 1))]}" ;;
-          8)
+          1|2|3|4|5|6|7|8|9) add_target_unique "${KNOWN_AGENT_DIRS[$((pk - 1))]}" ;;
+          10)
             custom_dir="$(prompt_line "   Enter full target path: ")"
             custom_dir="${custom_dir/#\~/$HOME}"
             [[ -n "$custom_dir" ]] && add_target_unique "$custom_dir" ;;
@@ -505,61 +699,49 @@ if [[ ${#TARGETS[@]} -eq 0 ]]; then
   fi
 fi
 
-# Step 4: Install Method (Symlink vs Copy)
-if [[ -z "$METHOD" ]]; then
+# Step 4: Always-On Global Rules (so the agent actually uses Dopamine Talk in every chat!)
+if [[ "$GLOBAL_RULES" == "ask" ]]; then
   if [[ $CAN_PROMPT -eq 1 ]]; then
-    if [[ -n "$LOCAL_REPO" ]]; then
-      if [[ "$EDITION" == "ru" ]]; then
-        echo "${BOLD}4. Способ установки:${RESET}"
-        echo "   ${AMBER}1)${RESET} ${BOLD}Симлинк${RESET} ${DIM}(рекомендуется — git pull обновляет скиллы автоматически)${RESET}"
-        echo "   ${AMBER}2)${RESET} ${BOLD}Копия${RESET}   ${DIM}(автономные файлы, клон можно удалить)${RESET}"
-        ans="$(prompt_line "   Выбор [1/2] (default 1): ")"
-      else
-        echo "${BOLD}4. Install method:${RESET}"
-        echo "   ${AMBER}1)${RESET} ${BOLD}Symlink${RESET} ${DIM}(recommended — git pull updates every skill in place)${RESET}"
-        echo "   ${AMBER}2)${RESET} ${BOLD}Copy${RESET}    ${DIM}(standalone files, safe to delete the clone afterwards)${RESET}"
-        ans="$(prompt_line "   Pick [1/2] (default 1): ")"
-      fi
-      case "${ans:-1}" in
-        1|link|symlink) METHOD="link" ;;
-        2|copy)         METHOD="copy" ;;
-        *) echo "${RED}error:${RESET} invalid method '$ans'" >&2; exit 2 ;;
-      esac
+    if [[ "$EDITION" == "ru" ]]; then
+      echo "${BOLD}4. Включить режим всегда по умолчанию?${RESET} ${DIM}(добавит компактный блок правил в CLAUDE.md / AGENTS.md / GEMINI.md — не трогая твои правила)${RESET}"
+      ans="$(prompt_line "   Включить всегда по умолчанию? [Y/n]: ")"
     else
-      if [[ "$EDITION" == "ru" ]]; then
-        echo "${BOLD}4. Способ установки:${RESET}"
-        echo "   ${AMBER}1)${RESET} ${BOLD}Копия${RESET}   ${DIM}(чистые файлы прямо в папки агентов, без лишних клонов)${RESET}"
-        echo "   ${AMBER}2)${RESET} ${BOLD}Симлинк${RESET} ${DIM}(клонирует репо в ~/.local/share/dopamine-talk для обновлений через git pull)${RESET}"
-        ans="$(prompt_line "   Выбор [1/2] (default 1): ")"
-      else
-        echo "${BOLD}4. Install method:${RESET}"
-        echo "   ${AMBER}1)${RESET} ${BOLD}Copy${RESET}    ${DIM}(clean standalone files directly in agent folders)${RESET}"
-        echo "   ${AMBER}2)${RESET} ${BOLD}Symlink${RESET} ${DIM}(keeps managed clone in ~/.local/share/dopamine-talk for git pull updates)${RESET}"
-        ans="$(prompt_line "   Pick [1/2] (default 1): ")"
-      fi
-      case "${ans:-1}" in
-        1|copy)         METHOD="copy" ;;
-        2|link|symlink) METHOD="link" ;;
-        *) echo "${RED}error:${RESET} invalid method '$ans'" >&2; exit 2 ;;
-      esac
+      echo "${BOLD}4. Enable always-on mode globally?${RESET} ${DIM}(appends a clean marked block to CLAUDE.md / AGENTS.md / GEMINI.md without touching your rules)${RESET}"
+      ans="$(prompt_line "   Enable always-on mode? [Y/n]: ")"
     fi
+    case "$(lower "${ans:-y}")" in
+      n|no|н|нет) GLOBAL_RULES="no" ;;
+      *)          GLOBAL_RULES="yes" ;;
+    esac
+    echo ""
+  else
+    GLOBAL_RULES="yes"
+  fi
+fi
+
+# Step 5: Install Method (Symlink vs Copy)
+if [[ -z "$METHOD" ]]; then
+  if [[ $CAN_PROMPT -eq 1 && -n "$LOCAL_REPO" ]]; then
+    if [[ "$EDITION" == "ru" ]]; then
+      echo "${BOLD}5. Способ установки:${RESET}"
+      echo "   ${AMBER}1)${RESET} ${BOLD}Симлинк${RESET} ${DIM}(рекомендуется — git pull обновляет скиллы автоматически)${RESET}"
+      echo "   ${AMBER}2)${RESET} ${BOLD}Копия${RESET}   ${DIM}(автономные файлы)${RESET}"
+      ans="$(prompt_line "   Выбор [1/2] (default 1): ")"
+    else
+      echo "${BOLD}5. Install method:${RESET}"
+      echo "   ${AMBER}1)${RESET} ${BOLD}Symlink${RESET} ${DIM}(recommended — git pull updates every skill in place)${RESET}"
+      echo "   ${AMBER}2)${RESET} ${BOLD}Copy${RESET}    ${DIM}(standalone files)${RESET}"
+      ans="$(prompt_line "   Pick [1/2] (default 1): ")"
+    fi
+    case "${ans:-1}" in
+      1|link|symlink) METHOD="link" ;;
+      2|copy)         METHOD="copy" ;;
+      *) echo "${RED}error:${RESET} invalid method '$ans'" >&2; exit 2 ;;
+    esac
     echo ""
   else
     METHOD="$([[ -n "$LOCAL_REPO" ]] && echo "link" || echo "copy")"
   fi
-fi
-
-# Step 5: Optional Always-On Rules File (AGENTS.md)
-if [[ $INSTALL_RULES -eq 0 && $CAN_PROMPT -eq 1 ]]; then
-  if [[ "$EDITION" == "ru" ]]; then
-    ans="$(prompt_line "${BOLD}5. Скопировать компактные всегда-активные правила AGENTS.md в текущую папку? [y/N]: ${RESET}")"
-  else
-    ans="$(prompt_line "${BOLD}5. Also copy compact always-on AGENTS.md rules into current folder? [y/N]: ${RESET}")"
-  fi
-  case "$(lower "${ans:-n}")" in
-    y|yes|д|да) INSTALL_RULES=1 ;;
-  esac
-  echo ""
 fi
 
 # Resolve source directory (local clone vs remote fetch)
@@ -602,7 +784,7 @@ if [[ "$EDITION" == "ru" ]]; then
 else
   SKILLS_SRC="$SOURCE_ROOT/skills"
   RULES_SRC="$SOURCE_ROOT/AGENTS.md"
-  EDITION_LABEL="EN (Western)"
+  EDITION_LABEL="EN (English)"
 fi
 
 if [[ ! -d "$SKILLS_SRC" ]]; then
@@ -613,6 +795,7 @@ fi
 # Perform Installation
 installed=0
 skipped=0
+rules_installed=0
 
 echo "${BOLD}Installing ${CORAL}Dopamine Talk${RESET}${BOLD} [${EDITION_LABEL} · ${METHOD}]...${RESET}"
 echo ""
@@ -630,10 +813,9 @@ for skill in "${SELECTED_SKILLS[@]}"; do
     dst="$target/$skill"
 
     if [[ -L "$dst" || -e "$dst" ]]; then
-      if [[ $FORCE -eq 1 ]]; then
+      if [[ $FORCE -eq 1 || $ASSUME_YES -eq 1 ]]; then
         remove_entry "$dst"
       elif [[ -L "$dst" ]]; then
-        # Safely replace existing dopamine-talk symlinks (even when switching EN <-> RU!)
         cur_link="$(readlink "$dst" 2>/dev/null || true)"
         if [[ "$cur_link" == *"dopamine-talk"* || "$cur_link" == *"dopamine-readme"* || "$cur_link" == *"dopamine-changelog"* ]]; then
           remove_entry "$dst"
@@ -651,9 +833,7 @@ for skill in "${SELECTED_SKILLS[@]}"; do
             *) skipped=$((skipped + 1)); continue ;;
           esac
         else
-          echo "  ${AMBER}!${RESET} skip     $dst ${DIM}(already exists — pass --force to overwrite)${RESET}" >&2
-          skipped=$((skipped + 1))
-          continue
+          remove_entry "$dst"
         fi
       fi
     fi
@@ -674,35 +854,32 @@ for skill in "${SELECTED_SKILLS[@]}"; do
   done
 done
 
-if [[ $INSTALL_RULES -eq 1 ]]; then
+if [[ "$GLOBAL_RULES" == "yes" && -f "$RULES_SRC" ]]; then
+  echo ""
+  for target in "${TARGETS[@]}"; do
+    if install_global_rule_for_target "$target" "$RULES_SRC" "$EDITION_LABEL"; then
+      rules_installed=$((rules_installed + 1))
+    fi
+  done
+fi
+
+if [[ $INSTALL_LOCAL_RULES -eq 1 && -f "$RULES_SRC" ]]; then
   mkdir -p "$RULES_DIR"
   rules_dst="${RULES_DIR%/}/AGENTS.md"
-  if [[ -e "$rules_dst" && $FORCE -eq 0 ]]; then
-    if [[ $CAN_PROMPT -eq 1 ]]; then
-      ans="$(prompt_line "  ${AMBER}!${RESET} $rules_dst already exists. Overwrite? [y/N]: ")"
-      case "$(lower "${ans:-n}")" in
-        y|yes|д|да) cp "$RULES_SRC" "$rules_dst"; echo "  ${GREEN}✓${RESET} rules    $rules_dst" ;;
-        *) echo "  ${DIM}skipped  $rules_dst${RESET}" ;;
-      esac
-    else
-      echo "  ${AMBER}!${RESET} skip     $rules_dst ${DIM}(already exists — pass --force to overwrite)${RESET}" >&2
-    fi
-  else
-    cp "$RULES_SRC" "$rules_dst"
-    echo "  ${GREEN}✓${RESET} rules    $rules_dst ${DIM}[${EDITION_LABEL}]${RESET}"
-  fi
+  upsert_marked_block "$rules_dst" "$RULES_SRC"
+  echo "  ${GREEN}✓${RESET} rules    $rules_dst ${DIM}[${EDITION_LABEL}]${RESET}"
 fi
 
 echo ""
-if [[ $installed -gt 0 ]]; then
+if [[ $installed -gt 0 || $rules_installed -gt 0 ]]; then
   if [[ "$EDITION" == "ru" ]]; then
-    echo "${GREEN}${BOLD}Готово!${RESET} Установлено ${BOLD}${installed}${RESET} записей (${EDITION_LABEL})."
-    echo "${DIM}Триггеры: «дофаминовое общение», «дофаминовый ридми», «дофаминовый чейнджлог».${RESET}"
-    echo "${DIM}Переключить на английскую версию в любой момент: ./install.sh --lang en --force${RESET}"
+    echo "${GREEN}${BOLD}Готово!${RESET} Установлено скиллов: ${BOLD}${installed}${RESET}, глобальных правил: ${BOLD}${rules_installed}${RESET} (${EDITION_LABEL})."
+    echo "${DIM}Открой новый чат в агенте — режим уже активен. Триггеры: «дофаминовое общение», «дофаминовый ридми», «дофаминовый чейнджлог».${RESET}"
+    echo "${DIM}Проверка: curl -fsSL ${SHORT_URL} | bash -s -- --status  |  Удалить: ... --uninstall${RESET}"
   else
-    echo "${GREEN}${BOLD}Done!${RESET} Installed ${BOLD}${installed}${RESET} skill target(s) (${EDITION_LABEL})."
-    echo "${DIM}Triggers: \"dopamine-talk\", \"dopamine-readme\", \"dopamine-changelog\".${RESET}"
-    echo "${DIM}Switch editions anytime: ./install.sh --lang ru --force  |  Check status: ./install.sh --status${RESET}"
+    echo "${GREEN}${BOLD}Done!${RESET} Installed ${BOLD}${installed}${RESET} skill(s) and ${BOLD}${rules_installed}${RESET} always-on rule target(s) (${EDITION_LABEL})."
+    echo "${DIM}Start a new chat — Dopamine Talk is active immediately. Triggers: \"dopamine-talk\", \"dopamine-readme\", \"dopamine-changelog\".${RESET}"
+    echo "${DIM}Status: curl -fsSL ${SHORT_URL} | bash -s -- --status  |  Uninstall: ... --uninstall${RESET}"
   fi
 fi
 

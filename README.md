@@ -262,21 +262,25 @@ No bloated frameworks, no hidden binaries, no API keys — one pure `SKILL.md` c
 
 ## Install
 
-### Interactive Installer (Fastest — Pick EN or RU, Skills & Agents)
+### One-Line Installer (Recommended — Skills + Always-On Mode)
 
-Runs with zero dependencies on Linux, macOS, WSL, and Windows (Git Bash). Auto-detects installed AI agents on your machine and lets you pick **English or Russian**, **all 3 skills or specific ones**, **symlink or copy**, and optional **`AGENTS.md`**:
+Auto-detects installed AI agents (Claude Code, Codex, Antigravity, Gemini CLI, Cursor, Windsurf, Copilot, OpenCode, Kiro), lets you pick **English or Russian**, installs all 3 skills, and safely appends a clean marked always-on block to global agent rules (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `dopamine-talk.mdc`) without touching your existing rules:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/AnnenkovLabs/dopamine-talk/main/install.sh | bash
+# macOS / Linux / WSL / Git Bash
+curl -fsSL https://dopamine.annenkov.me/install.sh | bash
+
+# Windows (PowerShell)
+irm https://dopamine.annenkov.me/install.ps1 | iex
 ```
 
-Or run non-interactively from a clone:
+Non-interactive examples:
 
 ```bash
-git clone https://github.com/AnnenkovLabs/dopamine-talk.git && cd dopamine-talk
-./install.sh --lang en --all-agents --yes      # Western English across all detected agents
-./install.sh --lang ru --all-agents --yes      # Native Russian edition
-./install.sh --status                          # Check installed edition & paths
+curl -fsSL https://dopamine.annenkov.me/install.sh | bash -s -- --lang en --yes        # English across detected agents
+curl -fsSL https://dopamine.annenkov.me/install.sh | bash -s -- --lang ru --yes        # Native Russian edition
+curl -fsSL https://dopamine.annenkov.me/install.sh | bash -s -- --status               # Check active edition & rules
+curl -fsSL https://dopamine.annenkov.me/install.sh | bash -s -- --uninstall            # Cleanly remove skills & rule blocks
 ```
 
 ### Universal (`npx skills` / skills.sh)
@@ -287,27 +291,23 @@ npx skills add AnnenkovLabs/dopamine-talk
 
 ### Claude Code
 
-Send as two separate prompts inside Claude Code:
+Run straight from your terminal:
 
-```text
-/plugin marketplace add AnnenkovLabs/dopamine-talk
-```
-
-```text
-/plugin install dopamine-talk@dopamine-talk       # Western English
-# or:
-/plugin install dopamine-talk-ru@dopamine-talk    # Native Russian
+```bash
+claude plugin marketplace add AnnenkovLabs/dopamine-talk && claude plugin install dopamine-talk@dopamine-talk
+# Russian native edition:
+claude plugin marketplace add AnnenkovLabs/dopamine-talk && claude plugin install dopamine-talk-ru@dopamine-talk
 ```
 
 <details>
 <summary><strong>Codex, Antigravity CLI, Gemini CLI, Copilot CLI, Goose, and rules-only hosts</strong></summary>
 
 - **OpenAI Codex:** `codex plugin marketplace add AnnenkovLabs/dopamine-talk && codex plugin add dopamine-talk@dopamine-talk`
-- **Antigravity CLI:** `agy plugin install https://github.com/AnnenkovLabs/dopamine-talk`
+- **Antigravity CLI:** `git clone --depth 1 https://github.com/AnnenkovLabs/dopamine-talk.git ~/.local/share/dopamine-talk && agy plugin install ~/.local/share/dopamine-talk` (or `curl -fsSL https://dopamine.annenkov.me/install.sh | bash -s -- --antigravity --yes`)
 - **Gemini CLI:** `gemini extensions install https://github.com/AnnenkovLabs/dopamine-talk`
 - **GitHub Copilot CLI:** `copilot plugin marketplace add AnnenkovLabs/dopamine-talk && copilot plugin install dopamine-talk@dopamine-talk` (or `dopamine-talk-ru@dopamine-talk`)
 - **Goose:** `goose plugin install https://github.com/AnnenkovLabs/dopamine-talk.git`
-- **Rules-only agents (Cursor, Windsurf, Cline, Zed, Amp, Jules):** copy [`AGENTS.md`](AGENTS.md) (or [`docs/i18n/AGENTS.ru.md`](docs/i18n/AGENTS.ru.md)) into your project root, or run `./install.sh --rules .`.
+- **Rules-only agents (Cursor, Windsurf, Cline, Zed, Amp, Jules):** our installer configures always-on global rules automatically, or copy [`AGENTS.md`](AGENTS.md) / [`docs/i18n/AGENTS.ru.md`](docs/i18n/AGENTS.ru.md) into your project root.
 
 Full flags, edition switching, and uninstall commands: **[INSTALL.md](INSTALL.md)**.
 

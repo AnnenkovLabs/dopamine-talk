@@ -257,38 +257,36 @@ Dopamine Talk родился не из сухой теории промпт-ин
 
 ## Установка
 
-### Интерактивный инсталлер (самый удобный — выбор RU/EN, скиллов и агентов)
+### Установщик в одну строку (рекомендуется — скиллы + всегда активный режим)
 
-Работает без единой зависимости на Linux, macOS, WSL и Windows (Git Bash). Сам находит установленных у тебя ИИ-агентов, даёт выбрать **Русскую или Западную английскую версию**, **все 3 скилла или выборочно**, **симлинк или копию** и при желании добавляет `AGENTS.md`:
+Сам находит установленных ИИ-агентов (Claude Code, Codex, Antigravity, Gemini CLI, Cursor, Windsurf, Copilot, OpenCode, Kiro), ставит все 3 скилла на русском или английском и аккуратно добавляет маркерный блок правил в глобальные инструкции (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `dopamine-talk.mdc`) — не затирая твои правила:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/AnnenkovLabs/dopamine-talk/main/install.sh | bash
+# macOS / Linux / WSL / Git Bash
+curl -fsSL https://dopamine.annenkov.me/install.sh | bash -s -- --lang ru
+
+# Windows (PowerShell)
+& ([scriptblock]::Create((irm https://dopamine.annenkov.me/install.ps1))) -Lang ru
 ```
 
-Или сразу флагами без единого вопроса:
+Проверка статуса и чистое удаление:
 
 ```bash
-git clone https://github.com/AnnenkovLabs/dopamine-talk.git && cd dopamine-talk
-./install.sh --lang ru --all-agents --yes      # Русская версия во все основные агенты
-./install.sh --lang en --all-agents --yes      # Западная английская версия
-./install.sh --status                          # Показать, какая версия (RU/EN) сейчас стоит
+curl -fsSL https://dopamine.annenkov.me/install.sh | bash -s -- --status
+curl -fsSL https://dopamine.annenkov.me/install.sh | bash -s -- --uninstall
 ```
 
 ### Claude Code
 
-Отправь двумя отдельными сообщениями внутри Claude Code:
+Запусти прямо в терминале одной строкой:
 
-```text
-/plugin marketplace add AnnenkovLabs/dopamine-talk
+```bash
+claude plugin marketplace add AnnenkovLabs/dopamine-talk && claude plugin install dopamine-talk-ru@dopamine-talk
+# Западная английская версия:
+claude plugin marketplace add AnnenkovLabs/dopamine-talk && claude plugin install dopamine-talk@dopamine-talk
 ```
 
-```text
-/plugin install dopamine-talk-ru@dopamine-talk    # Русская версия
-# или:
-/plugin install dopamine-talk@dopamine-talk       # Западная английская версия
-```
-
-### Универсальный способ (`npx skills` / skills.sh)
+### Универсальный способ (`npx skills` — английская версия)
 
 ```bash
 npx skills add AnnenkovLabs/dopamine-talk
@@ -297,12 +295,12 @@ npx skills add AnnenkovLabs/dopamine-talk
 <details>
 <summary><strong>Codex, Antigravity CLI, Gemini CLI, Copilot CLI, Goose и агенты с файлом правил</strong></summary>
 
-- **OpenAI Codex:** `codex plugin marketplace add AnnenkovLabs/dopamine-talk && codex plugin add dopamine-talk@dopamine-talk`
-- **Antigravity CLI:** `agy plugin install https://github.com/AnnenkovLabs/dopamine-talk`
-- **Gemini CLI:** `gemini extensions install https://github.com/AnnenkovLabs/dopamine-talk`
+- **OpenAI Codex:** `curl -fsSL https://dopamine.annenkov.me/install.sh | bash -s -- --lang ru --codex --yes` (или EN-плагин: `codex plugin marketplace add AnnenkovLabs/dopamine-talk && codex plugin add dopamine-talk@dopamine-talk`)
+- **Antigravity CLI:** `curl -fsSL https://dopamine.annenkov.me/install.sh | bash -s -- --lang ru --antigravity --yes` (или плагином: `git clone --depth 1 https://github.com/AnnenkovLabs/dopamine-talk.git ~/.local/share/dopamine-talk && agy plugin install ~/.local/share/dopamine-talk`)
+- **Gemini CLI:** `gemini extensions install https://github.com/AnnenkovLabs/dopamine-talk` (RU: `--lang ru --gemini --yes`)
 - **GitHub Copilot CLI:** `copilot plugin marketplace add AnnenkovLabs/dopamine-talk && copilot plugin install dopamine-talk-ru@dopamine-talk` (или `dopamine-talk@dopamine-talk`)
 - **Goose:** `goose plugin install https://github.com/AnnenkovLabs/dopamine-talk.git`
-- **Агенты с файлом правил (Cursor, Windsurf, Cline, Zed, Amp, Jules):** скопируй [`docs/i18n/AGENTS.ru.md`](AGENTS.ru.md) (или [`AGENTS.md`](../../AGENTS.md)) в корень проекта как `AGENTS.md`, либо запусти `./install.sh --lang ru --rules .`.
+- **Агенты с файлом правил (Cursor, Windsurf, Cline, Zed, Amp, Jules):** установщик сам прописывает глобальные правила, либо скопируй [`docs/i18n/AGENTS.ru.md`](AGENTS.ru.md) в корень проекта как `AGENTS.md`.
 
 Все флаги инсталлера, переключение версий и команды удаления: **[INSTALL.md](../../INSTALL.md)**.
 

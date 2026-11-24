@@ -2,49 +2,57 @@
 
 Dopamine Talk ships in **two native editions**:
 
-- **English (Western edition — [`skills/`](skills/)):** 5 post-RL fixes adapted for English engineering workflows (zero critic-gates, zero AST narration, zero corporate AI slop, zero timid caveats).
-- **Russian (Original native edition — [`skills-ru/`](skills-ru/)):** All 6 post-RL reflexes including full anti-Runglish cross-lingual collapse protection.
+- **English (Western edition — [`skills/`](skills/)):** sharp, energetic, zero-fluff engineering communication across chat, changelogs, and READMEs.
+- **Russian (Original native edition — [`skills-ru/`](skills-ru/)):** written natively in Russian with dedicated protection against cross-lingual Runglish and corporate filler.
 
 Zero runtime dependencies, zero API keys, zero hooks required. For which manifest maps to which host, see [Agent Portability](docs/agent-portability.md).
 
 ---
 
-## Interactive Installer (Recommended — Pick Edition, Skills & Agents)
+## One-Line Installer (Recommended — Skills + Always-On Mode)
 
-Works on Linux, macOS, WSL, and Windows (Git Bash) with zero dependencies. Automatically detects installed AI agents on your machine and lets you pick **English or Russian**, **all 3 skills or specific ones**, **symlink or copy**, and optional **`AGENTS.md` rules**:
+Installs all 3 skills **and** safely appends a clean marker-scoped always-on rule block (`<!-- dopamine-talk:start --> ... <!-- dopamine-talk:end -->`) into your detected agents' global instruction files (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, Cursor `dopamine-talk.mdc`, Windsurf `global_rules.md`, Copilot `copilot-instructions.md`) — never touching your own rules, and cleanly removable with `--uninstall`.
+
+### macOS / Linux / WSL / Git Bash
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/AnnenkovLabs/dopamine-talk/main/install.sh | bash
+# Interactive wizard (auto-detects agents & language)
+curl -fsSL https://dopamine.annenkov.me/install.sh | bash
+
+# Russian edition directly
+curl -fsSL https://dopamine.annenkov.me/install.sh | bash -s -- --lang ru
 ```
 
-Or from a local clone:
+### Windows (PowerShell 5.1+ / 7+)
 
-```bash
-git clone https://github.com/AnnenkovLabs/dopamine-talk.git
-cd dopamine-talk
-./install.sh
+```powershell
+# Interactive wizard
+irm https://dopamine.annenkov.me/install.ps1 | iex
+
+# Russian edition directly (non-interactive)
+& ([scriptblock]::Create((irm https://dopamine.annenkov.me/install.ps1))) -Lang ru -Yes
 ```
 
-### One-Line Non-Interactive Commands
+### Non-Interactive CLI Flags
 
 ```bash
-# English (Western) edition across Universal + Claude + Codex + Gemini
-./install.sh --lang en --all-agents --yes
+# English across all detected agents (skills + always-on global rules)
+curl -fsSL https://dopamine.annenkov.me/install.sh | bash -s -- --lang en --yes
 
-# Russian native edition across Claude Code and Codex
-./install.sh --lang ru --claude --codex --yes
+# Russian edition for Claude Code & Codex only
+curl -fsSL https://dopamine.annenkov.me/install.sh | bash -s -- --lang ru --claude --codex --yes
 
-# Pick individual skills (short aliases: talk, readme, changelog)
-./install.sh --lang en --skills talk,readme --claude --yes
+# Skills only (skip global always-on CLAUDE.md / AGENTS.md rules)
+curl -fsSL https://dopamine.annenkov.me/install.sh | bash -s -- --lang en --no-global-rules --yes
 
-# Switch installed edition EN <-> RU in one second
-./install.sh --lang ru --all-agents --force --yes
+# Switch EN <-> RU anytime
+curl -fsSL https://dopamine.annenkov.me/install.sh | bash -s -- --lang ru --force --yes
 
-# Check which edition (EN/RU) and skills are currently installed
-./install.sh --status
+# Check active edition, skills, and global always-on rules
+curl -fsSL https://dopamine.annenkov.me/install.sh | bash -s -- --status
 
-# Also copy compact always-on AGENTS.md into the current project
-./install.sh --lang en --claude --rules . --yes
+# Cleanly remove skills and marked always-on blocks (preserves your own rules)
+curl -fsSL https://dopamine.annenkov.me/install.sh | bash -s -- --uninstall
 ```
 
 <details>
@@ -52,89 +60,84 @@ cd dopamine-talk
 
 | Flag | What it does |
 | --- | --- |
-| `--lang en\|ru` | Pick Western English (`skills/`) or Russian native (`skills-ru/`) edition |
-| `--skills LIST` | Comma-separated skills: `all`, `talk`, `readme`, `changelog` (or full names) |
-| `--agents` | `~/.agents/skills` (Antigravity, OpenCode, Cline, Pi, DSH, Command Code) |
-| `--claude` | `~/.claude/skills` (Claude Code) |
-| `--codex` | `~/.codex/skills` (OpenAI Codex) |
-| `--gemini` | `~/.gemini/config/skills` (Gemini CLI / Antigravity config) |
-| `--cursor` | `~/.cursor/skills` (Cursor) |
-| `--opencode` | `~/.config/opencode/skills` (OpenCode) |
-| `--kiro` | `~/.kiro/skills` (Kiro) |
+| `--lang en\|ru` | Pick Western English (`skills/`) or native Russian (`skills-ru/`) edition |
+| `--skills LIST` | Comma-separated skills: `all`, `talk`, `readme`, `changelog` |
+| `--agents` | `~/.agents/skills` + `~/.agents/AGENTS.md` (Antigravity, OpenCode, Cline, Pi) |
+| `--claude` | `~/.claude/skills` + `~/.claude/CLAUDE.md` (Claude Code) |
+| `--codex` | `~/.codex/skills` + `~/.codex/AGENTS.md` (OpenAI Codex) |
+| `--gemini` | `~/.gemini/config/skills` + `~/.gemini/GEMINI.md` + `rules/dopamine-talk.md` |
+| `--antigravity` | Both `--agents` and `--gemini` |
+| `--cursor` | `~/.cursor/skills` + `~/.cursor/rules/dopamine-talk.mdc` (`alwaysApply: true`) |
+| `--windsurf` | `~/.codeium/windsurf/skills` + `~/.codeium/windsurf/memories/global_rules.md` |
+| `--copilot` | `~/.copilot/skills` + `~/.copilot/copilot-instructions.md` |
+| `--opencode` | `~/.config/opencode/skills` + `~/.config/opencode/AGENTS.md` |
+| `--kiro` | `~/.kiro/skills` + `~/.kiro/steering/dopamine-talk.md` |
 | `--dir PATH` | Any custom skills directory |
-| `--all-agents` | Universal + Claude Code + Codex + Gemini CLI |
+| `--all-agents` | Universal + Claude Code + Codex + Gemini + Cursor + Windsurf + Copilot |
+| `--global-rules` / `--no-global-rules` | Toggle global always-on rules (on by default with `--yes`) |
+| `--rules [DIR]` | Also upsert marked `AGENTS.md` into project `DIR` (default `.`) |
 | `--link` / `--copy` | Symlink (auto-updates via `git pull`) or standalone copy |
-| `--rules [DIR]` | Also copy matching-language `AGENTS.md` into `DIR` (default `.`) |
-| `--force`, `-f` | Replace existing Dopamine Talk installs (ideal for switching EN <-> RU) |
+| `--force`, `-f` | Replace existing Dopamine Talk installs (ideal for EN <-> RU switch) |
 | `-y`, `--yes` | Run non-interactively using detected/specified defaults |
-| `--status` | Inspect installed edition (`EN`/`RU`) and link/copy status across agents |
+| `--status` | Inspect installed edition (`EN`/`RU`), skills, and active global rules |
 | `--list` | Print all available skills across both editions |
-| `--uninstall` | Cleanly remove Dopamine Talk skills from selected or all targets |
+| `--uninstall` | Cleanly remove skills and marked always-on blocks |
 
 </details>
 
 ---
 
-## Claude Code & CodeBuddy
+## Claude Code
 
-Add the marketplace once, then install whichever edition you want:
+Run directly in your terminal:
 
-```text
-/plugin marketplace add AnnenkovLabs/dopamine-talk
+```bash
+# English edition
+claude plugin marketplace add AnnenkovLabs/dopamine-talk && claude plugin install dopamine-talk@dopamine-talk
+
+# Russian edition
+claude plugin marketplace add AnnenkovLabs/dopamine-talk && claude plugin install dopamine-talk-ru@dopamine-talk
 ```
 
-**English (Western) edition:**
-
-```text
-/plugin install dopamine-talk@dopamine-talk
-```
-
-**Russian native edition:**
-
-```text
-/plugin install dopamine-talk-ru@dopamine-talk
-```
-
-Update later with `/plugin update`.
+*(Inside an interactive Claude Code chat, run `/plugin marketplace add AnnenkovLabs/dopamine-talk` first, then `/plugin install dopamine-talk@dopamine-talk` as a second message.)*
 
 ---
 
 ## Universal (`npx skills` / skills.sh)
 
-Installs the English Western edition out of the box across 20+ agents:
+Installs the English edition across 20+ agents:
 
 ```bash
 npx skills add AnnenkovLabs/dopamine-talk
 ```
 
-Install all three skills globally without prompts:
-
-```bash
-npx skills add AnnenkovLabs/dopamine-talk --skill '*' --global
-```
-
-*(Want the Russian edition across 20+ agents? Use the [Interactive Installer](#interactive-installer-recommended--pick-edition-skills--agents) with `--lang ru`.)*
+*(For the Russian edition or always-on global rules, use the [One-Line Installer](#one-line-installer-recommended--skills--always-on-mode).)*
 
 ---
 
 ## OpenAI Codex (CLI & Desktop)
 
 ```bash
-codex plugin marketplace add AnnenkovLabs/dopamine-talk
-codex plugin add dopamine-talk@dopamine-talk
+codex plugin marketplace add AnnenkovLabs/dopamine-talk && codex plugin add dopamine-talk@dopamine-talk
 ```
 
-Start a new session (or restart Codex Desktop) so the skills load.
+*(For the Russian edition + always-on `~/.codex/AGENTS.md`: `curl -fsSL https://dopamine.annenkov.me/install.sh | bash -s -- --lang ru --codex --yes`.)*
 
 ---
 
 ## Antigravity CLI
 
+`agy plugin install` installs from a local plugin directory (bundles all 3 skills, custom 3D icon, and always-on `rules/AGENTS.md`):
+
 ```bash
-agy plugin install https://github.com/AnnenkovLabs/dopamine-talk
+git clone --depth 1 https://github.com/AnnenkovLabs/dopamine-talk.git ~/.local/share/dopamine-talk && agy plugin install ~/.local/share/dopamine-talk
 ```
 
-For always-on workspace rules, copy [`AGENTS.md`](AGENTS.md) (English) or [`docs/i18n/AGENTS.ru.md`](docs/i18n/AGENTS.ru.md) (Russian) into your repository root.
+Or install skills + always-on rules (EN or RU) without keeping a clone:
+
+```bash
+curl -fsSL https://dopamine.annenkov.me/install.sh | bash -s -- --lang ru --antigravity --yes
+```
 
 ---
 
@@ -151,9 +154,9 @@ Loads [`AGENTS.md`](AGENTS.md) as always-on context and discovers the skills in 
 ## GitHub Copilot CLI
 
 ```bash
-copilot plugin marketplace add AnnenkovLabs/dopamine-talk
-copilot plugin install dopamine-talk@dopamine-talk     # English edition
-copilot plugin install dopamine-talk-ru@dopamine-talk  # Russian edition
+copilot plugin marketplace add AnnenkovLabs/dopamine-talk && copilot plugin install dopamine-talk@dopamine-talk
+# Russian edition:
+copilot plugin marketplace add AnnenkovLabs/dopamine-talk && copilot plugin install dopamine-talk-ru@dopamine-talk
 ```
 
 ---
@@ -165,15 +168,8 @@ copilot plugin install dopamine-talk-ru@dopamine-talk  # Russian edition
 goose plugin install https://github.com/AnnenkovLabs/dopamine-talk.git
 
 # Oh My Pi
-omp plugin marketplace add AnnenkovLabs/dopamine-talk
-omp plugin install dopamine-talk@dopamine-talk
+omp plugin marketplace add AnnenkovLabs/dopamine-talk && omp plugin install dopamine-talk@dopamine-talk
 ```
-
----
-
-## Rules-Only Hosts (Cursor, Windsurf, Cline, Zed, Amp, Jules, CodeWhale)
-
-Copy [`AGENTS.md`](AGENTS.md) (English) or [`docs/i18n/AGENTS.ru.md`](docs/i18n/AGENTS.ru.md) (Russian) into your project root or global user rules file (`~/.codex/AGENTS.md`, `~/.claude/CLAUDE.md`, `~/.agents/AGENTS.md`).
 
 ---
 
@@ -181,10 +177,11 @@ Copy [`AGENTS.md`](AGENTS.md) (English) or [`docs/i18n/AGENTS.ru.md`](docs/i18n/
 
 | Host | Command |
 | --- | --- |
-| Interactive installer | `./install.sh --uninstall` (or add `--claude`, `--all-agents`, etc.) |
+| One-line installer (macOS/Linux) | `curl -fsSL https://dopamine.annenkov.me/install.sh \| bash -s -- --uninstall` |
+| One-line installer (Windows) | `& ([scriptblock]::Create((irm https://dopamine.annenkov.me/install.ps1))) -Uninstall` |
 | `npx skills` | `npx skills remove dopamine-talk dopamine-readme dopamine-changelog` |
-| Claude Code | `/plugin remove dopamine-talk` (or `dopamine-talk-ru`) |
+| Claude Code | `claude plugin uninstall dopamine-talk@dopamine-talk` (or `dopamine-talk-ru@dopamine-talk`) |
 | Codex | `codex plugin remove dopamine-talk` |
+| Antigravity | `agy plugin uninstall dopamine-talk` |
 | Gemini CLI | `gemini extensions uninstall dopamine-talk` |
 | GitHub Copilot CLI | `copilot plugin uninstall dopamine-talk` |
-| Rules-only hosts | Delete the copied `AGENTS.md` |
