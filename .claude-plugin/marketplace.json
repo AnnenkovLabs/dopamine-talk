@@ -1,0 +1,65 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "dopamine-talk",
+  "description": "Post-RL decompression skill pack: sharp engineering dialogue, living READMEs, and user-impact changelogs (EN & RU editions).",
+  "owner": {
+    "name": "AnnenkovLabs",
+    "url": "https://github.com/AnnenkovLabs"
+  },
+  "plugins": [
+    {
+      "name": "dopamine-talk",
+      "description": "English (Western) edition: strips RLVR critic-gates, AST narration, hedging, and corporate AI slop across dialogue, READMEs, and changelogs.",
+      "version": "1.0.0",
+      "source": "./",
+      "skills": [
+        "./skills/dopamine-talk",
+        "./skills/dopamine-readme",
+        "./skills/dopamine-changelog"
+      ],
+      "author": {
+        "name": "AnnenkovLabs",
+        "url": "https://github.com/AnnenkovLabs"
+      },
+      "homepage": "https://github.com/AnnenkovLabs/dopamine-talk",
+      "repository": "https://github.com/AnnenkovLabs/dopamine-talk",
+      "license": "MIT",
+      "category": "productivity",
+      "keywords": [
+        "skills",
+        "communication",
+        "readme",
+        "changelog",
+        "prompting",
+        "dopamine"
+      ]
+    },
+    {
+      "name": "dopamine-talk-ru",
+      "description": "Русская оригинальная версия: снимает все 6 рефлексов пост-трейнинга RLVR и англо-русскую кашу (Runglish) в диалоге, README и чейнджлогах.",
+      "version": "1.0.0",
+      "source": "./",
+      "skills": [
+        "./skills-ru/dopamine-talk",
+        "./skills-ru/dopamine-readme",
+        "./skills-ru/dopamine-changelog"
+      ],
+      "author": {
+        "name": "AnnenkovLabs",
+        "url": "https://github.com/AnnenkovLabs"
+      },
+      "homepage": "https://github.com/AnnenkovLabs/dopamine-talk",
+      "repository": "https://github.com/AnnenkovLabs/dopamine-talk",
+      "license": "MIT",
+      "category": "productivity",
+      "keywords": [
+        "skills",
+        "russian",
+        "communication",
+        "readme",
+        "changelog",
+        "dopamine"
+      ]
+    }
+  ]
+}

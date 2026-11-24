@@ -1,0 +1,39 @@
+{
+  "name": "dopamine-talk",
+  "description": "Post-RL decompression skill pack: sharp engineering dialogue, living READMEs, and user-impact changelogs (EN & RU editions).",
+  "owner": {
+    "name": "AnnenkovLabs",
+    "url": "https://github.com/AnnenkovLabs"
+  },
+  "plugins": [
+    {
+      "name": "dopamine-talk",
+      "description": "English (Western) edition: strips RLVR critic-gates, AST narration, hedging, and corporate AI slop.",
+      "source": "./",
+      "category": "productivity",
+      "tags": [
+        "skills",
+        "communication",
+        "readme",
+        "changelog",
+        "dopamine"
+      ],
+      "skills": "skills/"
+    },
+    {
+      "name": "dopamine-talk-ru",
+      "description": "Russian native edition: strips all 6 post-RL reflexes including Runglish token collapse.",
+      "source": "./",
+      "category": "productivity",
+      "tags": [
+        "skills",
+        "russian",
+        "communication",
+        "readme",
+        "changelog",
+        "dopamine"
+      ],
+      "skills": "skills-ru/"
+    }
+  ]
+}

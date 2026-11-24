@@ -1,0 +1,20 @@
+{
+  "name": "dopamine-talk",
+  "description": "Post-RL decompression pack for AI agents: sharp human dialogue without hedging or Runglish, living product READMEs, and user-impact changelogs.",
+  "version": "1.0.0",
+  "author": {
+    "name": "AnnenkovLabs",
+    "url": "https://github.com/AnnenkovLabs"
+  },
+  "homepage": "https://github.com/AnnenkovLabs/dopamine-talk",
+  "repository": "https://github.com/AnnenkovLabs/dopamine-talk",
+  "license": "MIT",
+  "keywords": [
+    "skills",
+    "communication",
+    "readme",
+    "changelog",
+    "dopamine"
+  ],
+  "skills": "skills/"
+}
