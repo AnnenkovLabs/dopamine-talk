@@ -484,7 +484,9 @@ try {
       $src = Join-Path $skillsSrc $s
       $dst = Join-Path $a.Skills $s
       if (-not (Test-Path (Join-Path $src "SKILL.md"))) { throw "Skill source missing: $src" }
-      if (Test-Path -LiteralPath $dst) {
+      # Get-Item also sees a broken link, which Test-Path reports as missing.
+      $existing = Get-Item -LiteralPath $dst -Force -ErrorAction SilentlyContinue
+      if ($existing) {
         if ($Force -or (Test-DopamineSkill $dst $s)) {
           Remove-SkillPath $dst
         } else {
