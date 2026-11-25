@@ -105,13 +105,36 @@ function Test-InstalledSkillPath([string]$Path, [string]$SkillName) {
 # A file is ours only when it carries the signature this installer writes.
 # Same-named user files are never deleted or reported as installed.
 function Test-OwnedRule([string]$Path) {
-  if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { return $false }
+  $item = Get-Item -LiteralPath $Path -Force -ErrorAction SilentlyContinue
+  if (-not $item) { return $false }
+  if ($item.Attributes -band [System.IO.FileAttributes]::ReparsePoint) { return $false }
+  if ($item.PSIsContainer) { return $false }
   $text = Get-Content -Raw -Encoding UTF8 $Path
   if ([System.IO.Path]::GetExtension($Path) -eq ".mdc") {
     return ($text -match 'description:\s*Dopamine Talk' -and $text -match 'alwaysApply:\s*true')
   }
   return ($text -match '# Dopamine Talk' -and
     ($text -match '## Core Rules' -or $text -match '## Пять главных правил'))
+}
+
+# Write an installer-owned rule only when it is missing or carries our
+# signature. A foreign same-named file is preserved unless -Force is explicit.
+function Write-OwnedRule([string]$Path, [string]$Content, [string]$Kind) {
+  $item = Get-Item -LiteralPath $Path -Force -ErrorAction SilentlyContinue
+  if ($item -and -not (Test-OwnedRule $Path)) {
+    if (-not $Force) {
+      Write-Host "  ! skip     $Path (unrelated file - pass -Force to replace)" -ForegroundColor Yellow
+      return $false
+    }
+    Remove-SkillPath $Path
+  }
+  if ($Kind -eq "cursor") {
+    $mdc = "---`ndescription: Dopamine Talk — Always-On Communication Rules`nalwaysApply: true`n---`n`n" + $Content.Trim() + "`n"
+    Write-Utf8NoBom $Path $mdc
+  } else {
+    Write-Utf8NoBom $Path ($Content.Trim() + "`n")
+  }
+  return $true
 }
 
 function Remove-SkillPath([string]$Path) {
@@ -460,21 +483,23 @@ try {
         "gemini" {
           Upsert-MarkedBlock $a.RulePath $rulesText
           $agRule = Join-Path $HomeDir ".gemini\config\rules\dopamine-talk.md"
-          Write-Utf8NoBom $agRule ($rulesText.Trim() + "`n")
           Write-Host "  [OK] rule    $($a.RulePath) [always-on]" -ForegroundColor Cyan
-          Write-Host "  [OK] rule    $agRule [always-on]" -ForegroundColor Cyan
+          if (Write-OwnedRule $agRule $rulesText "copy") {
+            Write-Host "  [OK] rule    $agRule [always-on]" -ForegroundColor Cyan
+          }
           $rulesCount++
         }
         "cursor" {
-          $mdc = "---`ndescription: Dopamine Talk — Always-On Communication Rules`nalwaysApply: true`n---`n`n" + $rulesText.Trim() + "`n"
-          Write-Utf8NoBom $a.RulePath $mdc
-          Write-Host "  [OK] rule    $($a.RulePath) [alwaysApply]" -ForegroundColor Cyan
-          $rulesCount++
+          if (Write-OwnedRule $a.RulePath $rulesText "cursor") {
+            Write-Host "  [OK] rule    $($a.RulePath) [alwaysApply]" -ForegroundColor Cyan
+            $rulesCount++
+          }
         }
         "owned" {
-          Write-Utf8NoBom $a.RulePath ($rulesText.Trim() + "`n")
-          Write-Host "  [OK] rule    $($a.RulePath) [always-on]" -ForegroundColor Cyan
-          $rulesCount++
+          if (Write-OwnedRule $a.RulePath $rulesText "copy") {
+            Write-Host "  [OK] rule    $($a.RulePath) [always-on]" -ForegroundColor Cyan
+            $rulesCount++
+          }
         }
       }
     }
