@@ -71,7 +71,7 @@ curl -fsSL https://dopamine.annenkov.me/install.sh | bash -s -- --uninstall --ru
 | `--agents` | `~/.agents/skills` + `~/.agents/AGENTS.md` (Antigravity, OpenCode, Cline, Pi) |
 | `--claude` | `~/.claude/skills` + `~/.claude/CLAUDE.md` (Claude Code) |
 | `--codex` | `~/.codex/skills` + `~/.codex/AGENTS.md` (OpenAI Codex) |
-| `--gemini` | `~/.gemini/config/skills` + `~/.gemini/GEMINI.md` + `rules/dopamine-talk.md` |
+| `--gemini` | `~/.gemini/config/skills` + `~/.gemini/GEMINI.md` + `~/.gemini/config/rules/dopamine-talk.md` |
 | `--antigravity` | Both `--agents` and `--gemini` |
 | `--cursor` | `~/.cursor/skills` + `~/.cursor/rules/dopamine-talk.mdc` (`alwaysApply: true`) |
 | `--windsurf` | `~/.codeium/windsurf/skills` + `~/.codeium/windsurf/memories/global_rules.md` |

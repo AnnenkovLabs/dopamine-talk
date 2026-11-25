@@ -88,7 +88,7 @@ Options:
   --copy                Install standalone copies
   --global-rules        Enable always-on global rules for selected agents (default with --yes)
   --no-global-rules     Install SKILL.md files only (do not touch global CLAUDE.md/AGENTS.md)
-  --rules [DIR]         Also copy standalone AGENTS.md into project DIR (default: .)
+  --rules [DIR]         Also upsert a marked AGENTS.md block into project DIR (default: .)
                         With --uninstall, remove that project AGENTS.md block again
   --force, -f           Replace any existing target, even an unrelated same-named directory
                         (Dopamine Talk copies are upgraded automatically without it)
