@@ -146,6 +146,9 @@ for (const rel of manifests) {
   if (typeof j.contextFileName === 'string' && !existsSync(join(ROOT, j.contextFileName))) {
     fail(rel, `contextFileName "${j.contextFileName}" does not exist`);
   }
+  if (j.logo && !existsSync(join(ROOT, j.logo))) {
+    fail(rel, `logo "${j.logo}" does not exist`);
+  }
   if (j.interface?.logo && !existsSync(join(ROOT, j.interface.logo))) {
     fail(rel, `interface.logo "${j.interface.logo}" does not exist`);
   }
