@@ -79,9 +79,9 @@ function Detect-Edition([string]$FilePath) {
 function Test-OrderedMarkedBlock([string]$FilePath) {
   if (-not (Test-Path -LiteralPath $FilePath -PathType Leaf)) { return $false }
   $text = Get-Content -Raw -Encoding UTF8 $FilePath
-  $s = $text.IndexOf($MarkerStart)
-  $e = $text.IndexOf($MarkerEnd)
-  return ($s -ge 0 -and $e -gt $s)
+  $s = [regex]::Escape($MarkerStart)
+  $e = [regex]::Escape($MarkerEnd)
+  return [regex]::IsMatch($text, "(?s)$s(?:(?!$s).)*?$e")
 }
 
 function Detect-MarkedEdition([string]$FilePath) {
