@@ -226,6 +226,22 @@ run_installer "$home" --uninstall --claude >/dev/null 2>&1
 assert_contains "$home/.claude/CLAUDE.md" "USER BEFORE" "uninstall preserves text after a lone start"
 assert_contains "$home/.claude/CLAUDE.md" "USER AFTER" "uninstall preserves text after the block"
 
+# 5c3. Rewriting a marked rule preserves its mode; a new one is not left 0600.
+home="$(new_home mode-preserve)"
+mkdir -p "$home/.claude"
+printf 'USER RULE\n' > "$home/.claude/CLAUDE.md"
+chmod 640 "$home/.claude/CLAUDE.md"
+run_installer "$home" --lang en --claude --yes --copy --global-rules >/dev/null 2>&1
+mode="$(stat -c '%a' "$home/.claude/CLAUDE.md" 2>/dev/null || stat -f '%Lp' "$home/.claude/CLAUDE.md" 2>/dev/null)"
+if [[ "$mode" == "640" ]]; then ok; else fail "install preserves the existing rule file mode (got $mode)"; fi
+run_installer "$home" --uninstall --claude >/dev/null 2>&1
+mode="$(stat -c '%a' "$home/.claude/CLAUDE.md" 2>/dev/null || stat -f '%Lp' "$home/.claude/CLAUDE.md" 2>/dev/null)"
+if [[ "$mode" == "640" ]]; then ok; else fail "uninstall preserves the existing rule file mode (got $mode)"; fi
+home="$(new_home mode-new)"
+run_installer "$home" --lang en --claude --yes --copy --global-rules >/dev/null 2>&1
+mode="$(stat -c '%a' "$home/.claude/CLAUDE.md" 2>/dev/null || stat -f '%Lp' "$home/.claude/CLAUDE.md" 2>/dev/null)"
+if [[ "$mode" == "644" ]]; then ok; else fail "new rule file is created with 0644 (got $mode)"; fi
+
 # 5d. Owned rule files are not overwritten without --force, and --force
 #     replaces a foreign file.
 home="$(new_home owned-foreign-install)"

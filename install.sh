@@ -300,6 +300,22 @@ detect_edition_from_block() {
   ' "$md"
 }
 
+# Preserve the mode of a file we rewrite, or use 0644 for a new file. mktemp
+# creates 0600, and a plain mv would silently make CLAUDE.md/AGENTS.md private.
+set_file_mode() {
+  local src="$1"
+  local dst="$2"
+  local mode=""
+  if [[ -e "$src" ]]; then
+    mode="$(stat -c '%a' "$src" 2>/dev/null || stat -f '%Lp' "$src" 2>/dev/null || true)"
+  fi
+  if [[ -n "$mode" ]]; then
+    chmod "$mode" "$dst" 2>/dev/null || true
+  else
+    chmod 644 "$dst" 2>/dev/null || true
+  fi
+}
+
 # True when the file contains at least one complete start...end marker pair in
 # that order. A lone or inverted marker must never be treated as a block.
 has_ordered_marked_block() {
@@ -418,6 +434,7 @@ upsert_marked_block() {
     printf '\n%s\n' "$MARKER_END" >> "$tmp_out"
   fi
 
+  set_file_mode "$dst" "$tmp_out"
   mv "$tmp_out" "$dst"
 }
 
@@ -455,6 +472,7 @@ remove_marked_block() {
   if [[ -z "$(tr -d '[:space:]' < "$tmp_out")" ]]; then
     rm -f "$tmp_out" "$dst"
   else
+    set_file_mode "$dst" "$tmp_out"
     mv "$tmp_out" "$dst"
   fi
   return 0
