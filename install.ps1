@@ -162,7 +162,17 @@ function Remove-SkillPath([string]$Path) {
     }
     return
   }
-  Remove-Item -LiteralPath $Path -Recurse -Force
+  if (-not $item.PSIsContainer) {
+    [System.IO.File]::SetAttributes($Path, [System.IO.FileAttributes]::Normal)
+    Remove-Item -LiteralPath $Path -Force
+    return
+  }
+  # Never recurse through nested links. Remove each child on its own, then the
+  # now-empty directory; PowerShell 5.1's Remove-Item -Recurse follows junctions.
+  foreach ($child in Get-ChildItem -LiteralPath $Path -Force) {
+    Remove-SkillPath $child.FullName
+  }
+  Remove-Item -LiteralPath $Path -Force
 }
 
 # Resolve -Skills once for install and uninstall. Invalid tokens fail loudly
