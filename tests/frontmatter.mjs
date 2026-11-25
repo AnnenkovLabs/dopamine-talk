@@ -23,7 +23,9 @@ function parseFrontmatter(text, where) {
     for (const e of [...doc.errors, ...doc.warnings]) {
       fail(where, `YAML ${e.name}: ${e.message.split('\n')[0]}`);
     }
-    return doc.errors.length ? null : doc.toJS();
+    if (doc.errors.length) return null;
+    const value = doc.toJS();
+    return value === null || value === undefined ? {} : value;
   }
 
   const result = {};
@@ -86,7 +88,11 @@ for (const { rootRel, label } of editions) {
       continue;
     }
     const fm = parseFrontmatter(m[1], where);
-    if (!fm) continue;
+    if (fm === null) continue;
+    if (!fm || typeof fm !== 'object' || Array.isArray(fm)) {
+      fail(where, 'frontmatter must be a YAML mapping');
+      continue;
+    }
 
     if (typeof fm.name !== 'string' || !/^[a-z0-9]+(-[a-z0-9]+)*$/.test(fm.name) || fm.name.length > 64) {
       fail(where, `name must be kebab-case <= 64 chars (got ${JSON.stringify(fm.name)})`);
@@ -143,12 +149,20 @@ for (const rel of manifests) {
     fail(rel, `invalid JSON: ${e.message}`);
     continue;
   }
+  if (!j || typeof j !== 'object' || Array.isArray(j)) {
+    fail(rel, 'manifest must be a JSON object');
+    continue;
+  }
 
   if (typeof j.skills === 'string' && !existsSync(join(ROOT, j.skills))) {
     fail(rel, `skills path "${j.skills}" does not exist`);
   }
   if (typeof j.contextFileName === 'string' && !existsSync(join(ROOT, j.contextFileName))) {
     fail(rel, `contextFileName "${j.contextFileName}" does not exist`);
+  }
+  if (j.interface !== undefined && (!j.interface || typeof j.interface !== 'object' || Array.isArray(j.interface))) {
+    fail(rel, 'interface must be a JSON object');
+    continue;
   }
   for (const [field, value] of [
     ['logo', j.logo],

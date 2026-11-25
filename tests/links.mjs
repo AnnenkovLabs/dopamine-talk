@@ -22,7 +22,7 @@ walk(ROOT);
 
 const broken = [];
 const isExternal = (target) =>
-  /^(https?:|mailto:|tel:|data:|#)/i.test(target) || target === '';
+  /^(https?:|mailto:|tel:|data:|#|\/\/)/i.test(target) || target === '';
 
 for (const file of mdFiles) {
   const dir = dirname(file);
