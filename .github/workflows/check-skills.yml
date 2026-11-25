@@ -23,3 +23,5 @@ jobs:
         run: node tests/links.mjs
       - name: Shell script syntax
         run: bash -n install.sh
+      - name: PowerShell script syntax
+        run: pwsh -NoProfile -File tests/powershell-syntax.ps1
