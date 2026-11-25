@@ -190,6 +190,10 @@ for (const rel of manifests) {
         ? [plugin.skills]
         : [];
     for (const s of skillEntries) {
+      if (typeof s !== 'string') {
+        fail(rel, `plugin "${plugin.name}" skill paths must be strings`);
+        continue;
+      }
       const resolved = join(ROOT, s);
       if (!existsSync(resolved)) {
         fail(rel, `plugin "${plugin.name}" references missing path "${s}"`);
