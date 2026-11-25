@@ -72,8 +72,12 @@ for (const { rootRel, label } of editions) {
   const names = new Map();
   for (const dir of readdirSync(dirRoot).sort()) {
     const fullDir = join(dirRoot, dir);
+    if (!statSync(fullDir).isDirectory()) continue;
     const file = join(fullDir, 'SKILL.md');
-    if (!statSync(fullDir).isDirectory() || !existsSync(file)) continue;
+    if (!existsSync(file)) {
+      fail(`${rootRel}/${dir}`, 'skill directory is missing SKILL.md');
+      continue;
+    }
     const where = `${rootRel}/${dir}/SKILL.md`;
     const src = readFileSync(file, 'utf8');
     const m = src.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n/);
@@ -164,6 +168,22 @@ for (const rel of manifests) {
     continue;
   }
   for (const plugin of j.plugins || []) {
+    if (!plugin || typeof plugin !== 'object' || Array.isArray(plugin)) {
+      fail(rel, 'plugin entries must be objects');
+      continue;
+    }
+    if (typeof plugin.name !== 'string' || !plugin.name) {
+      fail(rel, 'plugin.name must be a non-empty string');
+      continue;
+    }
+    if (
+      plugin.skills !== undefined &&
+      typeof plugin.skills !== 'string' &&
+      !Array.isArray(plugin.skills)
+    ) {
+      fail(rel, `plugin "${plugin.name}" skills must be a string or an array`);
+      continue;
+    }
     const skillEntries = Array.isArray(plugin.skills)
       ? plugin.skills
       : typeof plugin.skills === 'string'
