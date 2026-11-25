@@ -146,16 +146,23 @@ for (const rel of manifests) {
   if (typeof j.contextFileName === 'string' && !existsSync(join(ROOT, j.contextFileName))) {
     fail(rel, `contextFileName "${j.contextFileName}" does not exist`);
   }
-  if (j.logo && !existsSync(join(ROOT, j.logo))) {
-    fail(rel, `logo "${j.logo}" does not exist`);
-  }
-  if (j.interface?.logo && !existsSync(join(ROOT, j.interface.logo))) {
-    fail(rel, `interface.logo "${j.interface.logo}" does not exist`);
-  }
-  if (j.interface?.composerIcon && !existsSync(join(ROOT, j.interface.composerIcon))) {
-    fail(rel, `interface.composerIcon "${j.interface.composerIcon}" does not exist`);
+  for (const [field, value] of [
+    ['logo', j.logo],
+    ['interface.logo', j.interface?.logo],
+    ['interface.composerIcon', j.interface?.composerIcon],
+  ]) {
+    if (value === undefined) continue;
+    if (typeof value !== 'string') {
+      fail(rel, `${field} must be a string path`);
+    } else if (!existsSync(join(ROOT, value))) {
+      fail(rel, `${field} "${value}" does not exist`);
+    }
   }
 
+  if (j.plugins !== undefined && !Array.isArray(j.plugins)) {
+    fail(rel, 'plugins must be an array');
+    continue;
+  }
   for (const plugin of j.plugins || []) {
     const skillEntries = Array.isArray(plugin.skills)
       ? plugin.skills
