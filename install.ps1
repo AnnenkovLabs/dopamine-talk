@@ -198,7 +198,7 @@ function Resolve-SkillSelection([string]$Value) {
 # Explicit agent switches for uninstall, deduplicated by skills directory.
 function Get-ExplicitAgentList {
   $list = @()
-  if ($AllAgents) { return @($KnownAgents) }
+  if ($AllAgents) { $list += $KnownAgents[0..6] }
   if ($Agents) { $list += $KnownAgents[0] }
   if ($Claude) { $list += $KnownAgents[1] }
   if ($Codex) { $list += $KnownAgents[2] }
