@@ -264,7 +264,7 @@ if ($Status) {
     if (Test-Path $a.RulePath) {
       $marked = $a.RuleKind -eq "marked" -or $a.RuleKind -eq "gemini"
       $isHit = (-not $marked) -or ((Get-Content -Raw -Encoding UTF8 $a.RulePath) -like "*$MarkerStart*")
-      if ($a.RuleKind -eq "owned" -and -not (Test-OwnedRule $a.RulePath)) { $isHit = $false }
+      if ($a.RuleKind -in @("cursor", "owned") -and -not (Test-OwnedRule $a.RulePath)) { $isHit = $false }
       if ($isHit) {
         $found = $true
         $ed = if ($marked) { Detect-MarkedEdition $a.RulePath } else { Detect-Edition $a.RulePath }
