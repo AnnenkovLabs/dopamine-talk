@@ -79,6 +79,7 @@ function Detect-Edition([string]$FilePath) {
 function Test-OrderedMarkedBlock([string]$FilePath) {
   if (-not (Test-Path -LiteralPath $FilePath -PathType Leaf)) { return $false }
   $text = Get-Content -Raw -Encoding UTF8 $FilePath
+  if ($null -eq $text) { return $false }
   $s = [regex]::Escape($MarkerStart)
   $e = [regex]::Escape($MarkerEnd)
   return [regex]::IsMatch($text, "(?s)$s(?:(?!$s).)*?$e")
@@ -247,6 +248,7 @@ function Upsert-MarkedBlock([string]$Dst, [string]$RuleContent) {
   }
 
   $existing = Get-Content -Raw -Encoding UTF8 $Dst
+  if ($null -eq $existing) { $existing = "" }
   $s = [regex]::Escape($MarkerStart)
   $e = [regex]::Escape($MarkerEnd)
   # A nested start marker means the earlier one is an orphan: never let it pair
