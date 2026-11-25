@@ -31,6 +31,12 @@ irm https://dopamine.annenkov.me/install.ps1 | iex
 
 # Russian edition directly (non-interactive)
 & ([scriptblock]::Create((irm https://dopamine.annenkov.me/install.ps1))) -Lang ru -Yes
+
+# Replace existing copies, including an unrelated same-named skill directory
+& ([scriptblock]::Create((irm https://dopamine.annenkov.me/install.ps1))) -Lang en -Yes -Force
+
+# Remove only the Claude Code install and its CLAUDE.md rule block
+& ([scriptblock]::Create((irm https://dopamine.annenkov.me/install.ps1))) -Uninstall -Claude
 ```
 
 ### Non-Interactive CLI Flags

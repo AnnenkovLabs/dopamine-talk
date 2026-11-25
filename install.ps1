@@ -68,27 +68,155 @@ function Detect-Edition([string]$FilePath) {
   return "EN"
 }
 
+# Read the edition from the managed block only. Unrelated Russian text in the
+# user's CLAUDE.md/AGENTS.md must not turn an EN install into RU.
+function Detect-MarkedEdition([string]$FilePath) {
+  if (-not (Test-Path $FilePath)) { return "unknown" }
+  $txt = Get-Content -Raw -Encoding UTF8 $FilePath
+  $s = [regex]::Escape($MarkerStart)
+  $e = [regex]::Escape($MarkerEnd)
+  $m = [regex]::Match($txt, "(?s).*$s((?:(?!$s).)*?)$e")
+  if (-not $m.Success) { return "unknown" }
+  if ($m.Groups[1].Value -match 'Деактивирует|Пишет и переписывает|Включает режим|Всегда активные правила|Пять главных правил') { return "RU" }
+  return "EN"
+}
+
+# A directory is a verified Dopamine Talk install only when its SKILL.md declares
+# the expected skill name. This protects same-named unrelated directories.
+function Test-DopamineSkill([string]$Path, [string]$SkillName) {
+  $manifest = Join-Path $Path "SKILL.md"
+  if (-not (Test-Path -LiteralPath $manifest)) { return $false }
+  $text = Get-Content -Raw -Encoding UTF8 $manifest
+  return [bool]($text -match "(?m)^name:\s*$([regex]::Escape($SkillName))\s*$")
+}
+
+# Remove a skill directory without following a symlink/junction into its target.
+# Windows PowerShell 5.1's Remove-Item -Recurse is known to delete link targets.
+function Remove-SkillPath([string]$Path) {
+  $item = Get-Item -LiteralPath $Path -Force -ErrorAction SilentlyContinue
+  if (-not $item) { return }
+  if ($item.Attributes -band [System.IO.FileAttributes]::ReparsePoint) {
+    if ($item.PSIsContainer) {
+      [System.IO.Directory]::Delete($item.FullName, $false)
+    } else {
+      [System.IO.File]::Delete($item.FullName)
+    }
+    return
+  }
+  Remove-Item -LiteralPath $Path -Recurse -Force
+}
+
+# Resolve -Skills once for install and uninstall. Invalid tokens fail loudly
+# instead of silently installing/removing nothing.
+function Resolve-SkillSelection([string]$Value) {
+  $all = @("dopamine-talk", "dopamine-readme", "dopamine-changelog")
+  if (-not $Value) { return $all }
+  $tokens = @($Value -split "," | ForEach-Object { $_.Trim().ToLower() } | Where-Object { $_ })
+  if ($tokens -contains "all") { return $all }
+  $out = @()
+  foreach ($t in $tokens) {
+    switch ($t) {
+      { $_ -in @("talk", "dopamine-talk") } { $out += "dopamine-talk" }
+      { $_ -in @("readme", "dopamine-readme") } { $out += "dopamine-readme" }
+      { $_ -in @("changelog", "dopamine-changelog") } { $out += "dopamine-changelog" }
+      default { throw "Unknown skill '$t'. Use talk, readme, changelog or all." }
+    }
+  }
+  if ($out.Count -eq 0) { throw "No valid skills selected. Use talk, readme, changelog or all." }
+  return @($out | Select-Object -Unique)
+}
+
+# Explicit agent switches for uninstall, deduplicated by skills directory.
+function Get-ExplicitAgentList {
+  $list = @()
+  if ($AllAgents) { return @($KnownAgents) }
+  if ($Agents) { $list += $KnownAgents[0] }
+  if ($Claude) { $list += $KnownAgents[1] }
+  if ($Codex) { $list += $KnownAgents[2] }
+  if ($Gemini) { $list += $KnownAgents[3] }
+  if ($Antigravity) { $list += $KnownAgents[0]; $list += $KnownAgents[3] }
+  if ($Cursor) { $list += $KnownAgents[4] }
+  if ($Windsurf) { $list += $KnownAgents[5] }
+  if ($Copilot) { $list += $KnownAgents[6] }
+  if ($OpenCode) { $list += $KnownAgents[7] }
+  if ($Kiro) { $list += $KnownAgents[8] }
+  $deduped = @()
+  foreach ($a in $list) {
+    if (-not ($deduped | Where-Object { $_.Skills -eq $a.Skills })) { $deduped += $a }
+  }
+  return @($deduped)
+}
+
+function Remove-AgentRule($Agent) {
+  $removed = $false
+  if ($Agent.RuleKind -eq "marked" -or $Agent.RuleKind -eq "gemini") {
+    if (Remove-MarkedBlock $Agent.RulePath) {
+      Write-Host "  [OK] cleaned  $($Agent.RulePath)" -ForegroundColor Green
+      $removed = $true
+    }
+    if ($Agent.RuleKind -eq "gemini") {
+      $agRule = Join-Path $HomeDir ".gemini\config\rules\dopamine-talk.md"
+      if (Test-Path $agRule) {
+        Remove-Item -Force $agRule
+        Write-Host "  [OK] removed  $agRule" -ForegroundColor Green
+        $removed = $true
+      }
+    }
+  } elseif ($Agent.RuleKind -ne "none" -and (Test-Path $Agent.RulePath)) {
+    Remove-Item -Force $Agent.RulePath
+    Write-Host "  [OK] removed  $($Agent.RulePath)" -ForegroundColor Green
+    $removed = $true
+  }
+  return $removed
+}
+
 function Upsert-MarkedBlock([string]$Dst, [string]$RuleContent) {
   $block = "$MarkerStart`n$($RuleContent.Trim())`n$MarkerEnd"
-  if (Test-Path $Dst) {
-    $existing = Get-Content -Raw -Encoding UTF8 $Dst
-    $pattern = "(?s)" + [regex]::Escape($MarkerStart) + ".*?" + [regex]::Escape($MarkerEnd)
-    if ($existing -match $pattern) {
-      $updated = [regex]::Replace($existing, $pattern, [System.Text.RegularExpressions.MatchEvaluator]{ param($m) $block })
-      Write-Utf8NoBom $Dst $updated
-      return
-    }
-    $sep = if ($existing.Trim().Length -gt 0) { "`n`n" } else { "" }
-    Write-Utf8NoBom $Dst ($existing.TrimEnd() + $sep + $block + "`n")
-  } else {
+  if (-not (Test-Path $Dst)) {
     Write-Utf8NoBom $Dst ($block + "`n")
+    return
   }
+
+  $existing = Get-Content -Raw -Encoding UTF8 $Dst
+  $s = [regex]::Escape($MarkerStart)
+  $e = [regex]::Escape($MarkerEnd)
+  # A nested start marker means the earlier one is an orphan: never let it pair
+  # with an end marker that belongs to a later real block.
+  $pairPattern = "(?s)$s(?:(?!$s).)*?$e"
+  $matches = [regex]::Matches($existing, $pairPattern)
+
+  if ($matches.Count -gt 0) {
+    $sb = New-Object System.Text.StringBuilder
+    $pos = 0
+    for ($i = 0; $i -lt $matches.Count; $i++) {
+      $m = $matches[$i]
+      [void]$sb.Append($existing.Substring($pos, $m.Index - $pos))
+      if ($i -eq 0) { [void]$sb.Append($block) }
+      $pos = $m.Index + $m.Length
+    }
+    [void]$sb.Append($existing.Substring($pos))
+    Write-Utf8NoBom $Dst $sb.ToString()
+    return
+  }
+
+  if ($existing.Contains($MarkerStart)) {
+    $first = $existing.IndexOf($MarkerStart, [System.StringComparison]::Ordinal)
+    $before = $existing.Substring(0, $first)
+    $after = $existing.Substring($first + $MarkerStart.Length).Replace($MarkerStart, "")
+    Write-Utf8NoBom $Dst ($before + $block + $after)
+    return
+  }
+
+  $sep = if ($existing.Trim().Length -gt 0) { "`n`n" } else { "" }
+  Write-Utf8NoBom $Dst ($existing.TrimEnd() + $sep + $block + "`n")
 }
 
 function Remove-MarkedBlock([string]$Dst) {
   if (-not (Test-Path $Dst)) { return $false }
   $existing = Get-Content -Raw -Encoding UTF8 $Dst
-  $pattern = "(?s)\r?\n*" + [regex]::Escape($MarkerStart) + ".*?" + [regex]::Escape($MarkerEnd) + "\r?\n*"
+  $s = [regex]::Escape($MarkerStart)
+  $e = [regex]::Escape($MarkerEnd)
+  $pattern = "(?s)\r?\n*$s(?:(?!$s).)*?$e\r?\n*"
   if ($existing -notmatch $pattern) { return $false }
   $cleaned = ([regex]::Replace($existing, $pattern, "`n")).Trim()
   if ($cleaned.Length -eq 0) {
@@ -112,10 +240,11 @@ if ($Status) {
       }
     }
     if (Test-Path $a.RulePath) {
-      $isHit = ($a.RuleKind -ne "marked") -or ((Get-Content -Raw -Encoding UTF8 $a.RulePath) -like "*$MarkerStart*")
+      $marked = $a.RuleKind -eq "marked" -or $a.RuleKind -eq "gemini"
+      $isHit = (-not $marked) -or ((Get-Content -Raw -Encoding UTF8 $a.RulePath) -like "*$MarkerStart*")
       if ($isHit) {
         $found = $true
-        $ed = Detect-Edition $a.RulePath
+        $ed = if ($marked) { Detect-MarkedEdition $a.RulePath } else { Detect-Edition $a.RulePath }
         Write-Host ("  [OK] {0,-20} [{1} always-on]  {2}" -f "global-rule", $ed, $a.RulePath) -ForegroundColor Cyan
       }
     }
@@ -126,32 +255,36 @@ if ($Status) {
 }
 
 if ($Uninstall) {
+  $skillsToRemove = @(Resolve-SkillSelection $Skills)
+  $targets = @(Get-ExplicitAgentList)
+  if ($targets.Count -eq 0 -and -not $Dir) { $targets = @($KnownAgents) }
+
   Write-Host "`nUninstalling Dopamine Talk...`n" -ForegroundColor Cyan
   $removed = 0
-  foreach ($a in $KnownAgents) {
-    foreach ($s in @("dopamine-talk", "dopamine-readme", "dopamine-changelog")) {
+  foreach ($a in $targets) {
+    foreach ($s in $skillsToRemove) {
       $p = Join-Path $a.Skills $s
-      if (Test-Path $p) {
-        Remove-Item -Recurse -Force $p
+      if (Test-Path -LiteralPath $p) {
+        Remove-SkillPath $p
         Write-Host "  [OK] removed  $p" -ForegroundColor Green
         $removed++
       }
     }
-    if ($a.RuleKind -eq "marked" -or $a.RuleKind -eq "gemini") {
-      if (Remove-MarkedBlock $a.RulePath) {
-        Write-Host "  [OK] cleaned  $($a.RulePath)" -ForegroundColor Green
+    # Pack-wide rules are cleaned only for a full pack removal.
+    if ($skillsToRemove.Count -eq 3 -and (Remove-AgentRule $a)) { $removed++ }
+  }
+
+  if ($Dir) {
+    foreach ($s in $skillsToRemove) {
+      $p = Join-Path $Dir $s
+      if (Test-Path -LiteralPath $p) {
+        Remove-SkillPath $p
+        Write-Host "  [OK] removed  $p" -ForegroundColor Green
         $removed++
       }
-      if ($a.RuleKind -eq "gemini") {
-        $agRule = Join-Path $HomeDir ".gemini\config\rules\dopamine-talk.md"
-        if (Test-Path $agRule) { Remove-Item -Force $agRule; Write-Host "  [OK] removed  $agRule" -ForegroundColor Green; $removed++ }
-      }
-    } elseif (Test-Path $a.RulePath) {
-      Remove-Item -Force $a.RulePath
-      Write-Host "  [OK] removed  $($a.RulePath)" -ForegroundColor Green
-      $removed++
     }
   }
+
   if ($removed -eq 0) { Write-Host "  Nothing to remove." -ForegroundColor DarkGray }
   Write-Host ""
   return
@@ -173,22 +306,18 @@ if ($Lang) {
     Write-Host "   2) Русский (Живой русский — без духоты и Runglish)"
     $pick = Read-Host "   Pick [1/2] (default $defChoice)"
     if (-not $pick) { $pick = $defChoice }
-    $edition = if ($pick -in @("2", "ru", "russian")) { "ru" } else { "en" }
-  }
-}
-
-# Skill selection
-$selectedSkills = @("dopamine-talk", "dopamine-readme", "dopamine-changelog")
-if ($Skills -and $Skills.ToLower() -ne "all") {
-  $selectedSkills = @()
-  foreach ($part in ($Skills -split ",")) {
-    switch ($part.Trim().ToLower()) {
-      { $_ -in @("talk", "dopamine-talk") } { $selectedSkills += "dopamine-talk" }
-      { $_ -in @("readme", "dopamine-readme") } { $selectedSkills += "dopamine-readme" }
-      { $_ -in @("changelog", "dopamine-changelog") } { $selectedSkills += "dopamine-changelog" }
+    switch ($pick.Trim().ToLower()) {
+      { $_ -in @("1", "en", "english") } { $edition = "en" }
+      { $_ -in @("2", "ru", "russian") } { $edition = "ru" }
+      default { throw "Invalid language choice '$pick'. Use 1 (English) or 2 (Russian)." }
     }
   }
 }
+
+if ($Dir -and $Dir.Trim().Length -eq 0) { throw "-Dir requires a non-empty directory path." }
+
+# Skill selection
+$selectedSkills = @(Resolve-SkillSelection $Skills)
 
 # Target selection
 $selectedAgents = @()
@@ -232,13 +361,21 @@ if ($selectedAgents.Count -eq 0 -and -not $Dir) {
     } else {
       foreach ($n in ($pick -split ",")) {
         $idx = 0
-        if ([int]::TryParse($n.Trim(), [ref]$idx) -and $idx -ge 1 -and $idx -le $KnownAgents.Count) {
-          $selectedAgents += $KnownAgents[$idx - 1]
+        if (-not [int]::TryParse($n.Trim(), [ref]$idx) -or $idx -lt 1 -or $idx -gt $KnownAgents.Count) {
+          throw "Invalid target '$($n.Trim())'. Pick numbers 1-$($KnownAgents.Count), 'all', or press Enter."
         }
+        $selectedAgents += $KnownAgents[$idx - 1]
       }
     }
   }
 }
+
+$dedupedAgents = @()
+foreach ($a in $selectedAgents) {
+  if (-not ($dedupedAgents | Where-Object { $_.Skills -eq $a.Skills })) { $dedupedAgents += $a }
+}
+$selectedAgents = $dedupedAgents
+if ($selectedAgents.Count -eq 0 -and -not $Dir) { throw "No target agents selected. Use -Claude, -Codex, -Dir PATH, -AllAgents, or pick at least one number." }
 
 $enableGlobalRules = -not $NoGlobalRules
 if (-not $Yes -and -not $NoGlobalRules) {
@@ -262,6 +399,7 @@ try {
   $edLabel = if ($edition -eq "ru") { "RU" } else { "EN" }
 
   $installed = 0
+  $skipped = 0
   $rulesCount = 0
   Write-Host "Installing Dopamine Talk [$edLabel]...`n" -ForegroundColor Cyan
 
@@ -275,7 +413,16 @@ try {
     foreach ($s in $selectedSkills) {
       $src = Join-Path $skillsSrc $s
       $dst = Join-Path $a.Skills $s
-      if (Test-Path $dst) { Remove-Item -Recurse -Force $dst }
+      if (-not (Test-Path (Join-Path $src "SKILL.md"))) { throw "Skill source missing: $src" }
+      if (Test-Path -LiteralPath $dst) {
+        if ($Force -or (Test-DopamineSkill $dst $s)) {
+          Remove-SkillPath $dst
+        } else {
+          Write-Host "  [SKIP] $dst exists and is not a Dopamine Talk install (use -Force to replace)" -ForegroundColor Yellow
+          $skipped++
+          continue
+        }
+      }
       Copy-Item -Recurse -Force $src $dst
       Write-Host "  [OK] copied  $dst" -ForegroundColor Green
       $installed++
@@ -318,6 +465,7 @@ try {
     Write-Host "Done! Installed $installed skill(s) and $rulesCount always-on rule target(s) ($edLabel)." -ForegroundColor Green
     Write-Host "Open a new chat — Dopamine Talk is active immediately." -ForegroundColor DarkGray
   }
+  if ($skipped -gt 0) { Write-Host "$skipped target(s) skipped - see messages above." -ForegroundColor Yellow }
   Write-Host ""
 } finally {
   if (Test-Path $tmpDir) { Remove-Item -Recurse -Force $tmpDir }

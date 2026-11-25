@@ -23,4 +23,10 @@ Run the full CI suite in one command:
 node tests/frontmatter.mjs && node tests/text-encoding.mjs && node tests/links.mjs && bash -n install.sh
 ```
 
+If PowerShell is available, also parse the Windows installer:
+
+```powershell
+pwsh -NoProfile -File tests/powershell-syntax.ps1
+```
+
 Every check runs automatically via GitHub Actions on pull requests to `main`.
