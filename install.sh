@@ -744,12 +744,16 @@ if [[ "$MODE" == "uninstall" ]]; then
     [[ -d "$dir" ]] || continue
     for s in "${SELECTED_SKILLS[@]}"; do
       p="$dir/$s"
-      if [[ -L "$p" || -d "$p" ]]; then
-        if [[ -f "$p/SKILL.md" || -L "$p" ]]; then
-          remove_entry "$p"
-          echo "  ${GREEN}✓${RESET} removed  $p"
-          removed=$((removed + 1))
-        fi
+      # Remove our symlink or a verified Dopamine Talk directory. An unrelated
+      # file or a same-named directory with a foreign SKILL.md is not ours.
+      if [[ -L "$p" ]]; then
+        remove_entry "$p"
+        echo "  ${GREEN}✓${RESET} removed  $p"
+        removed=$((removed + 1))
+      elif [[ -d "$p" ]] && is_dopamine_skill_dir "$p" "$s"; then
+        remove_entry "$p"
+        echo "  ${GREEN}✓${RESET} removed  $p"
+        removed=$((removed + 1))
       fi
     done
   done

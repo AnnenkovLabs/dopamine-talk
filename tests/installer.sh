@@ -167,6 +167,17 @@ assert_count "$home/.claude/CLAUDE.md" "<!-- dopamine-talk:start -->" 1 "partial
 run_installer "$home" --uninstall --skills all --claude >/dev/null 2>&1
 assert_count "$home/.claude/CLAUDE.md" "<!-- dopamine-talk:start -->" 0 "full skill uninstall removes pack rules"
 
+# 5b. Uninstall must not delete an unrelated directory that happens to have a
+#     SKILL.md, nor a same-named regular file.
+home="$(new_home uninstall-unrelated)"
+mkdir -p "$home/.claude/skills/dopamine-talk" "$home/.claude/skills/dopamine-readme"
+printf 'name: someone-else\n' > "$home/.claude/skills/dopamine-talk/SKILL.md"
+printf 'KEEP FILE\n' > "$home/.claude/skills/dopamine-changelog"
+run_installer "$home" --uninstall --claude >/dev/null 2>&1
+assert_contains "$home/.claude/skills/dopamine-talk/SKILL.md" "name: someone-else" "uninstall leaves a foreign SKILL.md directory"
+assert_contains "$home/.claude/skills/dopamine-changelog" "KEEP FILE" "uninstall leaves a same-named regular file"
+if [[ -d "$home/.claude/skills/dopamine-readme" ]]; then ok; else fail "uninstall leaves an empty same-named directory"; fi
+
 # 6. Project AGENTS.md installed with --rules can be removed with --rules.
 home="$(new_home project)"
 mkdir -p "$home/project"
