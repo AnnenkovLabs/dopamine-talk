@@ -11,7 +11,7 @@ Zero runtime dependencies, zero API keys, zero hooks required. For which manifes
 
 ## One-Line Installer (Recommended — Skills + Always-On Mode)
 
-Installs all 3 skills **and** safely appends a clean marker-scoped always-on rule block (`<!-- dopamine-talk:start --> ... <!-- dopamine-talk:end -->`) into your detected agents' global instruction files (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, Cursor `dopamine-talk.mdc`, Windsurf `global_rules.md`, Copilot `copilot-instructions.md`) — never touching your own rules, and cleanly removable with `--uninstall`.
+Installs all 3 skills **and** safely enables always-on rules: a clean marker-scoped block (`<!-- dopamine-talk:start --> ... <!-- dopamine-talk:end -->`) in detected agents' instruction files (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, Windsurf `global_rules.md`, Copilot `copilot-instructions.md`) plus standalone Cursor (`~/.cursor/rules/dopamine-talk.mdc`), Kiro (`~/.kiro/steering/dopamine-talk.md`) and Gemini config (`~/.gemini/config/rules/dopamine-talk.md`) rule files. Foreign text and files are left alone, and everything is cleanly removable with `--uninstall`.
 
 ### macOS / Linux / WSL / Git Bash
 
@@ -89,7 +89,7 @@ curl -fsSL https://dopamine.annenkov.me/install.sh | bash -s -- --uninstall --ru
 | `-y`, `--yes` | Run non-interactively using detected/specified defaults |
 | `--status` | Inspect installed edition (`EN`/`RU`), skills, and active global rules |
 | `--list` | Print all available skills across both editions |
-| `--uninstall` | Remove skills selected by target flags and their always-on blocks; `--skills` subsets keep pack-wide rules |
+| `--uninstall` | Remove skills selected by target flags and their always-on rules; `--skills` subsets keep pack-wide rules |
 
 </details>
 
