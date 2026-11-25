@@ -714,6 +714,8 @@ remove_entry() {
     rm -f "$target"
   elif [[ -d "$target" ]]; then
     rm -rf "$target"
+  elif [[ -e "$target" ]]; then
+    rm -f "$target"
   fi
 }
 

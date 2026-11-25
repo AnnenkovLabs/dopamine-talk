@@ -77,6 +77,20 @@ run_installer "$home" --lang en --claude --yes --copy --no-global-rules --force 
 assert_missing "$home/.claude/skills/dopamine-talk/sentinel.txt" "--force replaces the conflicting directory"
 assert_file "$home/.claude/skills/dopamine-talk/SKILL.md" "--force installs the skill"
 
+# 2b. A same-named regular file is also protected without --force and replaced
+#     with --force.
+home="$(new_home fileconflict)"
+mkdir -p "$home/.claude/skills"
+printf 'FILE SENTINEL\n' > "$home/.claude/skills/dopamine-talk"
+if run_installer "$home" --lang en --claude --yes --copy --no-global-rules >/dev/null 2>&1; then
+  fail "install over a same-named file must exit non-zero"
+else
+  ok
+fi
+assert_contains "$home/.claude/skills/dopamine-talk" "FILE SENTINEL" "same-named file survives without --force"
+run_installer "$home" --lang en --claude --yes --copy --no-global-rules --force >/dev/null 2>&1
+assert_file "$home/.claude/skills/dopamine-talk/SKILL.md" "--force replaces a same-named file"
+
 # 3. Marker safety: duplicate blocks collapse, inverted/lone markers never eat
 #    the user's text.
 home="$(new_home markers)"
