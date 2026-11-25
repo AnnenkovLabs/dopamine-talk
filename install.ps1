@@ -76,6 +76,14 @@ function Detect-Edition([string]$FilePath) {
 
 # Read the edition from the managed block only. Unrelated Russian text in the
 # user's CLAUDE.md/AGENTS.md must not turn an EN install into RU.
+function Test-OrderedMarkedBlock([string]$FilePath) {
+  if (-not (Test-Path -LiteralPath $FilePath -PathType Leaf)) { return $false }
+  $text = Get-Content -Raw -Encoding UTF8 $FilePath
+  $s = $text.IndexOf($MarkerStart)
+  $e = $text.IndexOf($MarkerEnd)
+  return ($s -ge 0 -and $e -gt $s)
+}
+
 function Detect-MarkedEdition([string]$FilePath) {
   if (-not (Test-Path $FilePath)) { return "unknown" }
   $txt = Get-Content -Raw -Encoding UTF8 $FilePath
@@ -292,7 +300,7 @@ if ($Status) {
     }
     if (Test-Path $a.RulePath) {
       $marked = $a.RuleKind -eq "marked" -or $a.RuleKind -eq "gemini"
-      $isHit = (-not $marked) -or ((Get-Content -Raw -Encoding UTF8 $a.RulePath) -like "*$MarkerStart*")
+      $isHit = (-not $marked) -or (Test-OrderedMarkedBlock $a.RulePath)
       if ($a.RuleKind -in @("cursor", "owned") -and -not (Test-OwnedRule $a.RulePath)) { $isHit = $false }
       if ($isHit) {
         $found = $true
