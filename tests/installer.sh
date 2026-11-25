@@ -210,6 +210,22 @@ assert_missing "$home/.cursor/rules/dopamine-talk.mdc" "uninstall removes the in
 assert_missing "$home/.kiro/steering/dopamine-talk.md" "uninstall removes the installed Kiro rule"
 assert_missing "$home/.gemini/config/rules/dopamine-talk.md" "uninstall removes the installed Gemini rule"
 
+# 5c2. A lone start before a real block must not swallow the text between them.
+home="$(new_home orphan-before-block)"
+mkdir -p "$home/.claude"
+{
+  echo "<!-- dopamine-talk:start -->"
+  echo "USER BEFORE"
+  echo "<!-- dopamine-talk:start -->"
+  echo "old rule"
+  echo "<!-- dopamine-talk:end -->"
+  echo "USER AFTER"
+} > "$home/.claude/CLAUDE.md"
+run_installer "$home" --lang en --claude --yes --copy --global-rules >/dev/null 2>&1
+run_installer "$home" --uninstall --claude >/dev/null 2>&1
+assert_contains "$home/.claude/CLAUDE.md" "USER BEFORE" "uninstall preserves text after a lone start"
+assert_contains "$home/.claude/CLAUDE.md" "USER AFTER" "uninstall preserves text after the block"
+
 # 5d. Owned rule files are not overwritten without --force, and --force
 #     replaces a foreign file.
 home="$(new_home owned-foreign-install)"

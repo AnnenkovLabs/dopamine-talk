@@ -307,8 +307,8 @@ has_ordered_marked_block() {
   [[ -f "$dst" ]] || return 1
   awk -v s="$MARKER_START" -v e="$MARKER_END" '
     { line = $0; sub(/\r$/, "", line) }
-    !seen && line == s { seen = 1; next }
-    seen && line == e { found = 1; exit }
+    line == s { pending = 1; next }
+    pending && line == e { found = 1; exit }
     END { exit(found ? 0 : 1) }
   ' "$dst"
 }
