@@ -20,7 +20,7 @@ Thanks for wanting to make AI coding agents sharper and more fun to build with.
 Run the full CI suite in one command:
 
 ```bash
-node tests/frontmatter.mjs && node tests/text-encoding.mjs && node tests/links.mjs && bash -n install.sh
+node tests/frontmatter.mjs && node tests/text-encoding.mjs && node tests/links.mjs && bash tests/installer.sh && bash -n install.sh
 ```
 
 Every check runs automatically via GitHub Actions on pull requests to `main`.

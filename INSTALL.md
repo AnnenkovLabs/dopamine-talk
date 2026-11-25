@@ -53,6 +53,12 @@ curl -fsSL https://dopamine.annenkov.me/install.sh | bash -s -- --status
 
 # Cleanly remove skills and marked always-on blocks (preserves your own rules)
 curl -fsSL https://dopamine.annenkov.me/install.sh | bash -s -- --uninstall
+
+# Remove only Claude Code plus its CLAUDE.md rule block, leaving other agents alone
+curl -fsSL https://dopamine.annenkov.me/install.sh | bash -s -- --uninstall --claude
+
+# Remove a project AGENTS.md block installed earlier with --rules .
+curl -fsSL https://dopamine.annenkov.me/install.sh | bash -s -- --uninstall --rules .
 ```
 
 <details>
@@ -75,13 +81,13 @@ curl -fsSL https://dopamine.annenkov.me/install.sh | bash -s -- --uninstall
 | `--dir PATH` | Any custom skills directory |
 | `--all-agents` | Universal + Claude Code + Codex + Gemini + Cursor + Windsurf + Copilot |
 | `--global-rules` / `--no-global-rules` | Toggle global always-on rules (on by default with `--yes`) |
-| `--rules [DIR]` | Also upsert marked `AGENTS.md` into project `DIR` (default `.`) |
+| `--rules [DIR]` | Also upsert marked `AGENTS.md` into project `DIR` (default `.`); with `--uninstall`, remove that block |
 | `--link` / `--copy` | Symlink (auto-updates via `git pull`) or standalone copy |
-| `--force`, `-f` | Replace existing Dopamine Talk installs (ideal for EN <-> RU switch) |
+| `--force`, `-f` | Replace any existing target, including an unrelated same-named skill directory (Dopamine Talk copies upgrade automatically) |
 | `-y`, `--yes` | Run non-interactively using detected/specified defaults |
 | `--status` | Inspect installed edition (`EN`/`RU`), skills, and active global rules |
 | `--list` | Print all available skills across both editions |
-| `--uninstall` | Cleanly remove skills and marked always-on blocks |
+| `--uninstall` | Remove skills selected by target flags and their always-on blocks; `--skills` subsets keep pack-wide rules |
 
 </details>
 
