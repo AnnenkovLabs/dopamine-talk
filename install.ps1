@@ -463,7 +463,8 @@ if (-not $Yes -and -not $NoGlobalRules) {
   if ($ans -and $ans.Trim().ToLower() -in @("n", "no", "н", "нет")) { $enableGlobalRules = $false }
 }
 
-$tmpDir = Join-Path $env:TEMP ("dopamine-talk-" + [guid]::NewGuid().ToString("N").Substring(0, 8))
+$tempRoot = if ($env:TEMP) { $env:TEMP } else { [System.IO.Path]::GetTempPath() }
+$tmpDir = Join-Path $tempRoot ("dopamine-talk-" + [guid]::NewGuid().ToString("N").Substring(0, 8))
 New-Item -ItemType Directory -Path $tmpDir -Force | Out-Null
 try {
   $zipPath = Join-Path $tmpDir "repo.zip"
