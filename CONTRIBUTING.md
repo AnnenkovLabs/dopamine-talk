@@ -6,7 +6,7 @@ Thanks for wanting to make AI coding agents sharper and more fun to build with.
 
 - **Real Before vs After comparisons** on frontier models (same prompt, clean baseline vs skill loaded).
 - **New native language editions** — adapted idiomatically to how engineers actually speak in that language, never literal machine translations.
-- **New coding-agent adapters or installer fixes** in [`install.sh`](install.sh) and [`INSTALL.md`](INSTALL.md).
+- **New coding-agent adapters or installer fixes** in [`install.sh`](install.sh), [`install.ps1`](install.ps1), and [`INSTALL.md`](INSTALL.md).
 - **Prompt sharpness improvements** that tighten signal without turning the skills into rigid checklists.
 
 ## Editing Guidelines
