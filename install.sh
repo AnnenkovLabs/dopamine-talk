@@ -474,6 +474,7 @@ is_dopamine_skill_dir() {
 # installer. A same-named user file is never deleted on uninstall.
 is_owned_rule_file() {
   local f="$1"
+  [[ -L "$f" ]] && return 1
   [[ -f "$f" ]] || return 1
   case "$f" in
     "$HOME/.cursor/rules/dopamine-talk.mdc")
@@ -552,6 +553,29 @@ KNOWN_MARKED_RULE_FILES=(
   "$HOME/.config/opencode/AGENTS.md"
 )
 
+# Write an installer-owned rule file only when it is missing or carries our
+# signature. A foreign same-named file is preserved unless --force is explicit.
+install_owned_rule() {
+  local dst="$1"
+  local src="$2"
+  local kind="$3"
+  if [[ -e "$dst" || -L "$dst" ]]; then
+    if ! is_owned_rule_file "$dst"; then
+      if [[ $FORCE -ne 1 ]]; then
+        echo "  ${AMBER}!${RESET} skip     $dst ${DIM}(unrelated file — pass --force to replace)${RESET}" >&2
+        return 1
+      fi
+      remove_entry "$dst"
+    fi
+  fi
+  mkdir -p "$(dirname "$dst")"
+  case "$kind" in
+    cursor) write_cursor_mdc "$dst" "$src" ;;
+    copy)   cp "$src" "$dst" ;;
+    *)      return 1 ;;
+  esac
+}
+
 install_global_rule_for_target() {
   local target="$1"
   local rules_src="$2"
@@ -571,15 +595,17 @@ install_global_rule_for_target() {
       return 0 ;;
     "$HOME/.gemini/config/skills")
       upsert_marked_block "$HOME/.gemini/GEMINI.md" "$rules_src"
-      mkdir -p "$HOME/.gemini/config/rules"
-      cp "$rules_src" "$HOME/.gemini/config/rules/dopamine-talk.md"
       echo "  ${GREEN}✓${RESET} rule     $HOME/.gemini/GEMINI.md ${DIM}[always-on · ${ed_label}]${RESET}"
-      echo "  ${GREEN}✓${RESET} rule     $HOME/.gemini/config/rules/dopamine-talk.md ${DIM}[always-on · ${ed_label}]${RESET}"
+      if install_owned_rule "$HOME/.gemini/config/rules/dopamine-talk.md" "$rules_src" copy; then
+        echo "  ${GREEN}✓${RESET} rule     $HOME/.gemini/config/rules/dopamine-talk.md ${DIM}[always-on · ${ed_label}]${RESET}"
+      fi
       return 0 ;;
     "$HOME/.cursor/skills")
-      write_cursor_mdc "$HOME/.cursor/rules/dopamine-talk.mdc" "$rules_src"
-      echo "  ${GREEN}✓${RESET} rule     $HOME/.cursor/rules/dopamine-talk.mdc ${DIM}[alwaysApply · ${ed_label}]${RESET}"
-      return 0 ;;
+      if install_owned_rule "$HOME/.cursor/rules/dopamine-talk.mdc" "$rules_src" cursor; then
+        echo "  ${GREEN}✓${RESET} rule     $HOME/.cursor/rules/dopamine-talk.mdc ${DIM}[alwaysApply · ${ed_label}]${RESET}"
+        return 0
+      fi
+      return 1 ;;
     "$HOME/.codeium/windsurf/skills")
       upsert_marked_block "$HOME/.codeium/windsurf/memories/global_rules.md" "$rules_src"
       echo "  ${GREEN}✓${RESET} rule     $HOME/.codeium/windsurf/memories/global_rules.md ${DIM}[always-on · ${ed_label}]${RESET}"
@@ -593,10 +619,11 @@ install_global_rule_for_target() {
       echo "  ${GREEN}✓${RESET} rule     $HOME/.config/opencode/AGENTS.md ${DIM}[always-on · ${ed_label}]${RESET}"
       return 0 ;;
     "$HOME/.kiro/skills")
-      mkdir -p "$HOME/.kiro/steering"
-      cp "$rules_src" "$HOME/.kiro/steering/dopamine-talk.md"
-      echo "  ${GREEN}✓${RESET} rule     $HOME/.kiro/steering/dopamine-talk.md ${DIM}[always-on · ${ed_label}]${RESET}"
-      return 0 ;;
+      if install_owned_rule "$HOME/.kiro/steering/dopamine-talk.md" "$rules_src" copy; then
+        echo "  ${GREEN}✓${RESET} rule     $HOME/.kiro/steering/dopamine-talk.md ${DIM}[always-on · ${ed_label}]${RESET}"
+        return 0
+      fi
+      return 1 ;;
   esac
   return 1
 }
@@ -637,7 +664,7 @@ remove_global_rule_for_target() {
     echo "  ${GREEN}✓${RESET} cleaned  $rf"
     removed=1
   fi
-  if [[ "$target" == "$HOME/.gemini/config/skills" && -f "$HOME/.gemini/config/rules/dopamine-talk.md" ]]; then
+  if [[ "$target" == "$HOME/.gemini/config/skills" ]] && is_owned_rule_file "$HOME/.gemini/config/rules/dopamine-talk.md"; then
     rm -f "$HOME/.gemini/config/rules/dopamine-talk.md"
     echo "  ${GREEN}✓${RESET} removed  $HOME/.gemini/config/rules/dopamine-talk.md"
     removed=1

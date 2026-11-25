@@ -205,6 +205,26 @@ assert_missing "$home/.cursor/rules/dopamine-talk.mdc" "uninstall removes the in
 assert_missing "$home/.kiro/steering/dopamine-talk.md" "uninstall removes the installed Kiro rule"
 assert_missing "$home/.gemini/config/rules/dopamine-talk.md" "uninstall removes the installed Gemini rule"
 
+# 5d. Owned rule files are not overwritten without --force, and --force
+#     replaces a foreign file.
+home="$(new_home owned-foreign-install)"
+mkdir -p "$home/.cursor/rules" "$home/.kiro/steering" "$home/.gemini/config/rules"
+printf 'user cursor\n' > "$home/.cursor/rules/dopamine-talk.mdc"
+printf 'user kiro\n' > "$home/.kiro/steering/dopamine-talk.md"
+printf 'user gemini\n' > "$home/.gemini/config/rules/dopamine-talk.md"
+run_installer "$home" --lang en --cursor --kiro --gemini --yes --copy --global-rules >/dev/null 2>&1
+assert_contains "$home/.cursor/rules/dopamine-talk.mdc" "user cursor" "install leaves a foreign Cursor rule"
+assert_contains "$home/.kiro/steering/dopamine-talk.md" "user kiro" "install leaves a foreign Kiro rule"
+assert_contains "$home/.gemini/config/rules/dopamine-talk.md" "user gemini" "install leaves a foreign Gemini rule"
+run_installer "$home" --lang en --cursor --kiro --gemini --yes --copy --global-rules --force >/dev/null 2>&1
+assert_contains "$home/.cursor/rules/dopamine-talk.mdc" "alwaysApply: true" "--force replaces the foreign Cursor rule"
+assert_contains "$home/.kiro/steering/dopamine-talk.md" "# Dopamine Talk" "--force replaces the foreign Kiro rule"
+assert_contains "$home/.gemini/config/rules/dopamine-talk.md" "# Dopamine Talk" "--force replaces the foreign Gemini rule"
+run_installer "$home" --uninstall --cursor --kiro --gemini >/dev/null 2>&1
+assert_missing "$home/.cursor/rules/dopamine-talk.mdc" "uninstall removes the forced Cursor rule"
+assert_missing "$home/.kiro/steering/dopamine-talk.md" "uninstall removes the forced Kiro rule"
+assert_missing "$home/.gemini/config/rules/dopamine-talk.md" "uninstall removes the forced Gemini rule"
+
 # 6. Project AGENTS.md installed with --rules can be removed with --rules.
 home="$(new_home project)"
 mkdir -p "$home/project"
