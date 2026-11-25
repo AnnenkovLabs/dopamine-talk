@@ -102,6 +102,18 @@ function Test-InstalledSkillPath([string]$Path, [string]$SkillName) {
   return (Test-DopamineSkill $Path $SkillName)
 }
 
+# A file is ours only when it carries the signature this installer writes.
+# Same-named user files are never deleted or reported as installed.
+function Test-OwnedRule([string]$Path) {
+  if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { return $false }
+  $text = Get-Content -Raw -Encoding UTF8 $Path
+  if ([System.IO.Path]::GetExtension($Path) -eq ".mdc") {
+    return ($text -match 'description:\s*Dopamine Talk' -and $text -match 'alwaysApply:\s*true')
+  }
+  return ($text -match '# Dopamine Talk' -and
+    ($text -match '## Core Rules' -or $text -match '## Пять главных правил'))
+}
+
 function Remove-SkillPath([string]$Path) {
   $item = Get-Item -LiteralPath $Path -Force -ErrorAction SilentlyContinue
   if (-not $item) { return }
@@ -166,13 +178,13 @@ function Remove-AgentRule($Agent) {
     }
     if ($Agent.RuleKind -eq "gemini") {
       $agRule = Join-Path $HomeDir ".gemini\config\rules\dopamine-talk.md"
-      if (Test-Path $agRule) {
+      if (Test-OwnedRule $agRule) {
         Remove-Item -Force $agRule
         Write-Host "  [OK] removed  $agRule" -ForegroundColor Green
         $removed = $true
       }
     }
-  } elseif ($Agent.RuleKind -ne "none" -and (Test-Path $Agent.RulePath)) {
+  } elseif ($Agent.RuleKind -ne "none" -and (Test-OwnedRule $Agent.RulePath)) {
     Remove-Item -Force $Agent.RulePath
     Write-Host "  [OK] removed  $($Agent.RulePath)" -ForegroundColor Green
     $removed = $true
@@ -252,6 +264,7 @@ if ($Status) {
     if (Test-Path $a.RulePath) {
       $marked = $a.RuleKind -eq "marked" -or $a.RuleKind -eq "gemini"
       $isHit = (-not $marked) -or ((Get-Content -Raw -Encoding UTF8 $a.RulePath) -like "*$MarkerStart*")
+      if ($a.RuleKind -eq "owned" -and -not (Test-OwnedRule $a.RulePath)) { $isHit = $false }
       if ($isHit) {
         $found = $true
         $ed = if ($marked) { Detect-MarkedEdition $a.RulePath } else { Detect-Edition $a.RulePath }
