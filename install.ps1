@@ -181,9 +181,9 @@ function Resolve-SkillSelection([string]$Value) {
   $all = @("dopamine-talk", "dopamine-readme", "dopamine-changelog")
   if (-not $Value) { return $all }
   $tokens = @($Value -split "," | ForEach-Object { $_.Trim().ToLower() } | Where-Object { $_ })
-  if ($tokens -contains "all") { return $all }
   $out = @()
   foreach ($t in $tokens) {
+    if ($t -eq "all") { $out += $all; continue }
     switch ($t) {
       { $_ -in @("talk", "dopamine-talk") } { $out += "dopamine-talk" }
       { $_ -in @("readme", "dopamine-readme") } { $out += "dopamine-readme" }
