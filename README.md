@@ -192,7 +192,7 @@ Not a lazy Google-translated clone — both editions are authored natively for h
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/readme/editions-en-dark.svg">
     <source media="(prefers-color-scheme: light)" srcset="assets/readme/editions-en-light.svg">
-    <img src="assets/readme/editions-en-dark.svg" alt="Two Native Editions diagram (two obsidian-glass cards linked by a bidirectional switch icon). Left card [WESTERN EDITION · English (Native)]: paths skills/ and AGENTS.md; 5 post-RL fixes + anti-corporate-AI-slop voice; zero non-English clutter or Runglish rules; triggers 'dopamine-talk', 'no fluff', 'drop hedging'. Right card [ORIGINAL AUTHOR PACK · Russian (Native)]: paths skills-ru/ and docs/i18n/AGENTS.ru.md; all 6 post-RL fixes from the original Nov 17 pack; Anti-Runglish shield stops English-in-Russian collapse; native Russian triggers + full RU README and Changelog. Bottom bar: Same clean skill names, 1-second switch via ./install.sh --lang en|ru --force." width="840">
+    <img src="assets/readme/editions-en-dark.svg" alt="Two Native Editions diagram (two obsidian-glass cards linked by a bidirectional switch icon). Left card [WESTERN EDITION · English (Native)]: paths skills/ and AGENTS.md; 5 post-RL fixes + anti-corporate-AI-slop voice; zero non-English clutter or Runglish rules; triggers 'dopamine-talk', 'no fluff', 'drop hedging'. Right card [ORIGINAL AUTHOR PACK · Russian (Native)]: paths skills-ru/ and docs/i18n/AGENTS.ru.md; all 6 post-RL fixes from the original Nov 17 pack; Anti-Runglish shield stops English-in-Russian collapse; native Russian triggers + full RU README and Changelog. Bottom bar: Same clean skill names, 1-second switch via ./install.sh --lang en|ru." width="840">
   </picture>
 </p>
 
