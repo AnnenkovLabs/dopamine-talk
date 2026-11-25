@@ -11,7 +11,7 @@ Zero runtime dependencies, zero API keys, zero hooks required. For which manifes
 
 ## One-Line Installer (Recommended — Skills + Always-On Mode)
 
-Installs all 3 skills **and** safely appends a clean marker-scoped always-on rule block (`<!-- dopamine-talk:start --> ... <!-- dopamine-talk:end -->`) into your detected agents' global instruction files (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, Cursor `dopamine-talk.mdc`, Windsurf `global_rules.md`, Copilot `copilot-instructions.md`) — never touching your own rules, and cleanly removable with `--uninstall`.
+Installs all 3 skills **and** safely enables always-on rules: a clean marker-scoped block (`<!-- dopamine-talk:start --> ... <!-- dopamine-talk:end -->`) in detected agents' instruction files (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, Windsurf `global_rules.md`, Copilot `copilot-instructions.md`) plus standalone Cursor (`~/.cursor/rules/dopamine-talk.mdc`), Kiro (`~/.kiro/steering/dopamine-talk.md`) and Gemini config (`~/.gemini/config/rules/dopamine-talk.md`) rule files. Foreign text and files are left alone, and everything is cleanly removable with `--uninstall`.
 
 ### macOS / Linux / WSL / Git Bash
 
@@ -45,14 +45,22 @@ curl -fsSL https://dopamine.annenkov.me/install.sh | bash -s -- --lang ru --clau
 # Skills only (skip global always-on CLAUDE.md / AGENTS.md rules)
 curl -fsSL https://dopamine.annenkov.me/install.sh | bash -s -- --lang en --no-global-rules --yes
 
-# Switch EN <-> RU anytime
-curl -fsSL https://dopamine.annenkov.me/install.sh | bash -s -- --lang ru --force --yes
+# Switch EN <-> RU anytime (verified Dopamine Talk copies upgrade in place)
+curl -fsSL https://dopamine.annenkov.me/install.sh | bash -s -- --lang ru --yes
+
+# Use --force only to replace a same-named path that is not a verified install
 
 # Check active edition, skills, and global always-on rules
 curl -fsSL https://dopamine.annenkov.me/install.sh | bash -s -- --status
 
 # Cleanly remove skills and marked always-on blocks (preserves your own rules)
 curl -fsSL https://dopamine.annenkov.me/install.sh | bash -s -- --uninstall
+
+# Remove only Claude Code plus its CLAUDE.md rule block, leaving other agents alone
+curl -fsSL https://dopamine.annenkov.me/install.sh | bash -s -- --uninstall --claude
+
+# Remove a project AGENTS.md block installed earlier with --rules .
+curl -fsSL https://dopamine.annenkov.me/install.sh | bash -s -- --uninstall --rules .
 ```
 
 <details>
@@ -65,7 +73,7 @@ curl -fsSL https://dopamine.annenkov.me/install.sh | bash -s -- --uninstall
 | `--agents` | `~/.agents/skills` + `~/.agents/AGENTS.md` (Antigravity, OpenCode, Cline, Pi) |
 | `--claude` | `~/.claude/skills` + `~/.claude/CLAUDE.md` (Claude Code) |
 | `--codex` | `~/.codex/skills` + `~/.codex/AGENTS.md` (OpenAI Codex) |
-| `--gemini` | `~/.gemini/config/skills` + `~/.gemini/GEMINI.md` + `rules/dopamine-talk.md` |
+| `--gemini` | `~/.gemini/config/skills` + `~/.gemini/GEMINI.md` + `~/.gemini/config/rules/dopamine-talk.md` |
 | `--antigravity` | Both `--agents` and `--gemini` |
 | `--cursor` | `~/.cursor/skills` + `~/.cursor/rules/dopamine-talk.mdc` (`alwaysApply: true`) |
 | `--windsurf` | `~/.codeium/windsurf/skills` + `~/.codeium/windsurf/memories/global_rules.md` |
@@ -75,13 +83,13 @@ curl -fsSL https://dopamine.annenkov.me/install.sh | bash -s -- --uninstall
 | `--dir PATH` | Any custom skills directory |
 | `--all-agents` | Universal + Claude Code + Codex + Gemini + Cursor + Windsurf + Copilot |
 | `--global-rules` / `--no-global-rules` | Toggle global always-on rules (on by default with `--yes`) |
-| `--rules [DIR]` | Also upsert marked `AGENTS.md` into project `DIR` (default `.`) |
+| `--rules [DIR]` | Also upsert marked `AGENTS.md` into project `DIR` (default `.`); with `--uninstall`, remove that block |
 | `--link` / `--copy` | Symlink (auto-updates via `git pull`) or standalone copy |
-| `--force`, `-f` | Replace existing Dopamine Talk installs (ideal for EN <-> RU switch) |
+| `--force`, `-f` | Replace any existing target, including an unrelated same-named skill directory (Dopamine Talk copies upgrade automatically) |
 | `-y`, `--yes` | Run non-interactively using detected/specified defaults |
 | `--status` | Inspect installed edition (`EN`/`RU`), skills, and active global rules |
 | `--list` | Print all available skills across both editions |
-| `--uninstall` | Cleanly remove skills and marked always-on blocks |
+| `--uninstall` | Remove skills selected by target flags and their always-on rules; `--skills` subsets keep pack-wide rules |
 
 </details>
 

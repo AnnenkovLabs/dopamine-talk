@@ -88,12 +88,15 @@ Options:
   --copy                Install standalone copies
   --global-rules        Enable always-on global rules for selected agents (default with --yes)
   --no-global-rules     Install SKILL.md files only (do not touch global CLAUDE.md/AGENTS.md)
-  --rules [DIR]         Also copy standalone AGENTS.md into project DIR (default: .)
-  --force, -f           Overwrite existing Dopamine Talk installs (great for EN <-> RU switch)
+  --rules [DIR]         Also upsert a marked AGENTS.md block into project DIR (default: .)
+                        With --uninstall, remove that project AGENTS.md block again
+  --force, -f           Replace any existing target, even an unrelated same-named directory
+                        (Dopamine Talk copies are upgraded automatically without it)
   -y, --yes             Skip interactive prompts and use detected/specified defaults
   --status              Show installed edition (EN/RU), skills, and active always-on rules
   --list                List available skills across EN and RU editions
-  --uninstall           Cleanly remove installed skills and marked always-on rule blocks
+  --uninstall           Remove selected skills and their always-on rule blocks
+                        (combine with target flags; partial --skills keeps pack rules)
   -h, --help            Show this help message
 
 Target Agent Shortcuts:
@@ -161,9 +164,11 @@ while [[ $# -gt 0 ]]; do
     --skills)
       [[ $# -ge 2 ]] || { echo "${RED}error:${RESET} --skills requires a value" >&2; exit 2; }
       IFS=',' read -r -a _parts <<< "$2"
+      _skills_seen=0
       for _p in "${_parts[@]}"; do
         _p="$(printf '%s' "$_p" | tr -d '[:space:]')"
         [[ -z "$_p" ]] && continue
+        _skills_seen=1
         _norm="$(normalize_skill_name "$_p")" || { echo "${RED}error:${RESET} unknown skill '$_p'" >&2; exit 2; }
         if [[ "$_norm" == "ALL" ]]; then
           add_skill_unique "dopamine-talk"
@@ -173,6 +178,7 @@ while [[ $# -gt 0 ]]; do
           add_skill_unique "$_norm"
         fi
       done
+      [[ $_skills_seen -eq 1 ]] || { echo "${RED}error:${RESET} --skills requires at least one skill" >&2; exit 2; }
       shift ;;
     --agents)      add_target_unique "$HOME/.agents/skills" ;;
     --claude)      add_target_unique "$HOME/.claude/skills" ;;
@@ -193,7 +199,7 @@ while [[ $# -gt 0 ]]; do
       add_target_unique "$HOME/.codeium/windsurf/skills"
       add_target_unique "$HOME/.copilot/skills" ;;
     --dir)
-      [[ $# -ge 2 ]] || { echo "${RED}error:${RESET} --dir requires a directory path" >&2; exit 2; }
+      [[ $# -ge 2 && -n "$2" ]] || { echo "${RED}error:${RESET} --dir requires a non-empty directory path" >&2; exit 2; }
       add_target_unique "$2"
       shift ;;
     --link|--symlink)  METHOD="link" ;;
@@ -203,6 +209,7 @@ while [[ $# -gt 0 ]]; do
     --rules)
       INSTALL_LOCAL_RULES=1
       if [[ $# -ge 2 && "$2" != -* ]]; then
+        [[ -n "$2" ]] || { echo "${RED}error:${RESET} --rules requires a non-empty directory path" >&2; exit 2; }
         RULES_DIR="$2"
         shift
       fi ;;
@@ -257,8 +264,78 @@ detect_edition_from_file() {
   fi
 }
 
-# Portable POSIX awk helpers for marker-scoped always-on global rules
-# Never overwrites or damages user's own rules outside markers.
+# Detect the edition from the managed block only, so unrelated Russian text in a
+# user's CLAUDE.md/AGENTS.md cannot make an EN install look like RU.
+detect_edition_from_block() {
+  local md="$1"
+  awk -v s="$MARKER_START" -v e="$MARKER_END" -v md="$md" '
+    BEGIN {
+      n = 0
+      while ((getline line < md) > 0) {
+        sub(/\r$/, "", line)
+        lines[++n] = line
+      }
+      close(md)
+
+      pending = 0
+      pairs = 0
+      for (i = 1; i <= n; i++) {
+        if (lines[i] == s) pending = i
+        else if (pending && lines[i] == e) {
+          pairs++
+          start[pairs] = pending
+          end[pairs] = i
+          pending = 0
+        }
+      }
+      if (pairs == 0) { print "unknown"; exit }
+
+      found = 0
+      for (i = start[1] + 1; i < end[1]; i++) {
+        if (lines[i] ~ /Деактивирует|Пишет и переписывает|Включает режим|Всегда активные правила|Пять главных правил/) {
+          found = 1
+          break
+        }
+      }
+      print (found ? "RU" : "EN")
+      exit
+    }
+  ' "$md"
+}
+
+# Preserve the mode of a file we rewrite, or use 0644 for a new file. mktemp
+# creates 0600, and a plain mv would silently make CLAUDE.md/AGENTS.md private.
+set_file_mode() {
+  local src="$1"
+  local dst="$2"
+  local mode=""
+  if [[ -e "$src" ]]; then
+    mode="$(stat -c '%a' "$src" 2>/dev/null || stat -f '%Lp' "$src" 2>/dev/null || true)"
+  fi
+  if [[ -n "$mode" ]]; then
+    chmod "$mode" "$dst" 2>/dev/null || true
+  else
+    chmod 644 "$dst" 2>/dev/null || true
+  fi
+}
+
+# True when the file contains at least one complete start...end marker pair in
+# that order. A lone or inverted marker must never be treated as a block.
+has_ordered_marked_block() {
+  local dst="$1"
+  [[ -f "$dst" ]] || return 1
+  awk -v s="$MARKER_START" -v e="$MARKER_END" '
+    { line = $0; sub(/\r$/, "", line) }
+    line == s { pending = 1; next }
+    pending && line == e { found = 1; exit }
+    END { exit(found ? 0 : 1) }
+  ' "$dst"
+}
+
+# Portable POSIX awk helpers for marker-scoped always-on global rules.
+# User content outside complete marker pairs is preserved; extra complete blocks
+# are collapsed into one, and malformed markers never delete the text that
+# follows them.
 upsert_marked_block() {
   local dst="$1"
   local src="$2"
@@ -266,19 +343,89 @@ upsert_marked_block() {
   local tmp_out
   tmp_out="$(mktemp)"
 
-  if [[ -f "$dst" ]] && grep -Fq "$MARKER_START" "$dst" 2>/dev/null && grep -Fq "$MARKER_END" "$dst" 2>/dev/null; then
-    awk -v s="$MARKER_START" -v e="$MARKER_END" -v rf="$src" '
-      BEGIN { skipping = 0 }
-      $0 == s {
-        print s
-        while ((getline line < rf) > 0) print line
-        close(rf)
-        print e
-        skipping = 1
-        next
+  if has_ordered_marked_block "$dst"; then
+    awk -v s="$MARKER_START" -v e="$MARKER_END" -v rf="$src" -v dst="$dst" '
+      BEGIN {
+        n = 0
+        while ((getline line < dst) > 0) lines[++n] = line
+        close(dst)
+
+        eol = ""
+        for (i = 1; i <= n; i++) {
+          if (lines[i] ~ /\r$/) { eol = "\r"; break }
+        }
+
+        inside = 0
+        pairs = 0
+        for (i = 1; i <= n; i++) {
+          line = lines[i]
+          sub(/\r$/, "", line)
+          if (line == s) inside = i
+          else if (inside && line == e) {
+            pairs++
+            start[pairs] = inside
+            end[pairs] = i
+            inside = 0
+          }
+        }
+
+        # Keep the first complete block (rewritten below) and collapse later ones.
+        for (p = 2; p <= pairs; p++)
+          for (i = start[p]; i <= end[p]; i++) drop[i] = 1
+
+        for (i = 1; i <= n; i++) {
+          if (pairs > 0 && i == start[1]) {
+            print s eol
+            while ((getline line < rf) > 0) {
+              sub(/\r$/, "", line)
+              print line eol
+            }
+            close(rf)
+            print e eol
+            i = end[1]
+            continue
+          }
+          if (drop[i]) continue
+          print lines[i]
+        }
+        exit
       }
-      skipping && $0 == e { skipping = 0; next }
-      !skipping { print }
+    ' "$dst" > "$tmp_out"
+  elif [[ -f "$dst" ]] && grep -Fq "$MARKER_START" "$dst" 2>/dev/null; then
+    # A lone start marker (interrupted or hand-edited install): put the fresh
+    # block where the orphan started, keep every line after it as user content,
+    # and drop only the duplicate start markers so they cannot pair with the new
+    # end marker and swallow user text later.
+    awk -v s="$MARKER_START" -v e="$MARKER_END" -v rf="$src" -v dst="$dst" '
+      BEGIN {
+        n = 0
+        eol = ""
+        while ((getline raw < dst) > 0) {
+          if (raw ~ /\r$/) eol = "\r"
+          sub(/\r$/, "", raw)
+          lines[++n] = raw
+        }
+        close(dst)
+
+        replaced = 0
+        for (i = 1; i <= n; i++) {
+          if (lines[i] == s) {
+            if (!replaced) {
+              print s eol
+              while ((getline line < rf) > 0) {
+                sub(/\r$/, "", line)
+                print line eol
+              }
+              close(rf)
+              print e eol
+              replaced = 1
+            }
+            continue
+          }
+          print lines[i] eol
+        }
+        exit
+      }
     ' "$dst" > "$tmp_out"
   else
     if [[ -f "$dst" && -s "$dst" ]]; then
@@ -290,27 +437,76 @@ upsert_marked_block() {
     printf '\n%s\n' "$MARKER_END" >> "$tmp_out"
   fi
 
+  set_file_mode "$dst" "$tmp_out"
   mv "$tmp_out" "$dst"
 }
 
 remove_marked_block() {
   local dst="$1"
   [[ -f "$dst" ]] || return 1
-  grep -Fq "$MARKER_START" "$dst" 2>/dev/null || return 1
+  has_ordered_marked_block "$dst" || return 1
   local tmp_out
   tmp_out="$(mktemp)"
-  awk -v s="$MARKER_START" -v e="$MARKER_END" '
-    BEGIN { skipping = 0 }
-    $0 == s { skipping = 1; next }
-    skipping && $0 == e { skipping = 0; next }
-    !skipping { print }
+  awk -v s="$MARKER_START" -v e="$MARKER_END" -v dst="$dst" '
+    BEGIN {
+      n = 0
+      while ((getline line < dst) > 0) lines[++n] = line
+      close(dst)
+
+      inside = 0
+      pairs = 0
+      for (i = 1; i <= n; i++) {
+        line = lines[i]
+        sub(/\r$/, "", line)
+        if (line == s) inside = i
+        else if (inside && line == e) {
+          pairs++
+          start[pairs] = inside
+          end[pairs] = i
+          inside = 0
+        }
+      }
+      for (p = 1; p <= pairs; p++)
+        for (i = start[p]; i <= end[p]; i++) drop[i] = 1
+      for (i = 1; i <= n; i++) if (!drop[i]) print lines[i]
+      exit
+    }
   ' "$dst" > "$tmp_out"
   if [[ -z "$(tr -d '[:space:]' < "$tmp_out")" ]]; then
     rm -f "$tmp_out" "$dst"
   else
+    set_file_mode "$dst" "$tmp_out"
     mv "$tmp_out" "$dst"
   fi
   return 0
+}
+
+# A directory is a verified Dopamine Talk install only when its SKILL.md declares
+# the expected skill name. This lets a repeat non-interactive install upgrade its
+# own copy while refusing to silently delete a same-named unrelated directory.
+is_dopamine_skill_dir() {
+  local dir="$1"
+  local skill="$2"
+  [[ -f "$dir/SKILL.md" ]] || return 1
+  grep -Eq "^name:[[:space:]]*${skill}[[:space:]]*$" "$dir/SKILL.md" 2>/dev/null
+}
+
+# A file is ours only when it carries the exact signature written by this
+# installer. A same-named user file is never deleted on uninstall.
+is_owned_rule_file() {
+  local f="$1"
+  [[ -L "$f" ]] && return 1
+  [[ -f "$f" ]] || return 1
+  case "$f" in
+    "$HOME/.cursor/rules/dopamine-talk.mdc")
+      grep -Fq 'description: Dopamine Talk' "$f" 2>/dev/null &&
+        grep -Fq 'alwaysApply: true' "$f" 2>/dev/null ;;
+    "$HOME/.kiro/steering/dopamine-talk.md"|"$HOME/.gemini/config/rules/dopamine-talk.md")
+      grep -Fq '# Dopamine Talk' "$f" 2>/dev/null &&
+        { grep -Fq '## Core Rules' "$f" 2>/dev/null ||
+          grep -Fq '## Пять главных правил' "$f" 2>/dev/null; } ;;
+    *) return 1 ;;
+  esac
 }
 
 write_cursor_mdc() {
@@ -378,6 +574,29 @@ KNOWN_MARKED_RULE_FILES=(
   "$HOME/.config/opencode/AGENTS.md"
 )
 
+# Write an installer-owned rule file only when it is missing or carries our
+# signature. A foreign same-named file is preserved unless --force is explicit.
+install_owned_rule() {
+  local dst="$1"
+  local src="$2"
+  local kind="$3"
+  if [[ -e "$dst" || -L "$dst" ]]; then
+    if ! is_owned_rule_file "$dst"; then
+      if [[ $FORCE -ne 1 ]]; then
+        echo "  ${AMBER}!${RESET} skip     $dst ${DIM}(unrelated file — pass --force to replace)${RESET}" >&2
+        return 1
+      fi
+      remove_entry "$dst"
+    fi
+  fi
+  mkdir -p "$(dirname "$dst")"
+  case "$kind" in
+    cursor) write_cursor_mdc "$dst" "$src" ;;
+    copy)   cp "$src" "$dst" ;;
+    *)      return 1 ;;
+  esac
+}
+
 install_global_rule_for_target() {
   local target="$1"
   local rules_src="$2"
@@ -397,15 +616,17 @@ install_global_rule_for_target() {
       return 0 ;;
     "$HOME/.gemini/config/skills")
       upsert_marked_block "$HOME/.gemini/GEMINI.md" "$rules_src"
-      mkdir -p "$HOME/.gemini/config/rules"
-      cp "$rules_src" "$HOME/.gemini/config/rules/dopamine-talk.md"
       echo "  ${GREEN}✓${RESET} rule     $HOME/.gemini/GEMINI.md ${DIM}[always-on · ${ed_label}]${RESET}"
-      echo "  ${GREEN}✓${RESET} rule     $HOME/.gemini/config/rules/dopamine-talk.md ${DIM}[always-on · ${ed_label}]${RESET}"
+      if install_owned_rule "$HOME/.gemini/config/rules/dopamine-talk.md" "$rules_src" copy; then
+        echo "  ${GREEN}✓${RESET} rule     $HOME/.gemini/config/rules/dopamine-talk.md ${DIM}[always-on · ${ed_label}]${RESET}"
+      fi
       return 0 ;;
     "$HOME/.cursor/skills")
-      write_cursor_mdc "$HOME/.cursor/rules/dopamine-talk.mdc" "$rules_src"
-      echo "  ${GREEN}✓${RESET} rule     $HOME/.cursor/rules/dopamine-talk.mdc ${DIM}[alwaysApply · ${ed_label}]${RESET}"
-      return 0 ;;
+      if install_owned_rule "$HOME/.cursor/rules/dopamine-talk.mdc" "$rules_src" cursor; then
+        echo "  ${GREEN}✓${RESET} rule     $HOME/.cursor/rules/dopamine-talk.mdc ${DIM}[alwaysApply · ${ed_label}]${RESET}"
+        return 0
+      fi
+      return 1 ;;
     "$HOME/.codeium/windsurf/skills")
       upsert_marked_block "$HOME/.codeium/windsurf/memories/global_rules.md" "$rules_src"
       echo "  ${GREEN}✓${RESET} rule     $HOME/.codeium/windsurf/memories/global_rules.md ${DIM}[always-on · ${ed_label}]${RESET}"
@@ -419,12 +640,57 @@ install_global_rule_for_target() {
       echo "  ${GREEN}✓${RESET} rule     $HOME/.config/opencode/AGENTS.md ${DIM}[always-on · ${ed_label}]${RESET}"
       return 0 ;;
     "$HOME/.kiro/skills")
-      mkdir -p "$HOME/.kiro/steering"
-      cp "$rules_src" "$HOME/.kiro/steering/dopamine-talk.md"
-      echo "  ${GREEN}✓${RESET} rule     $HOME/.kiro/steering/dopamine-talk.md ${DIM}[always-on · ${ed_label}]${RESET}"
-      return 0 ;;
+      if install_owned_rule "$HOME/.kiro/steering/dopamine-talk.md" "$rules_src" copy; then
+        echo "  ${GREEN}✓${RESET} rule     $HOME/.kiro/steering/dopamine-talk.md ${DIM}[always-on · ${ed_label}]${RESET}"
+        return 0
+      fi
+      return 1 ;;
   esac
   return 1
+}
+
+# Remove only the always-on rule owned by one selected agent target. Used by
+# targeted uninstalls so `--uninstall --claude` also cleans CLAUDE.md instead of
+# leaving an active rule block behind.
+remove_global_rule_for_target() {
+  local target="$1"
+  local rf=""
+  case "$target" in
+    "$HOME/.agents/skills")                   rf="$HOME/.agents/AGENTS.md" ;;
+    "$HOME/.claude/skills")                   rf="$HOME/.claude/CLAUDE.md" ;;
+    "$HOME/.codex/skills")                    rf="$HOME/.codex/AGENTS.md" ;;
+    "$HOME/.gemini/config/skills")            rf="$HOME/.gemini/GEMINI.md" ;;
+    "$HOME/.codeium/windsurf/skills")         rf="$HOME/.codeium/windsurf/memories/global_rules.md" ;;
+    "$HOME/.copilot/skills")                  rf="$HOME/.copilot/copilot-instructions.md" ;;
+    "$HOME/.config/opencode/skills")          rf="$HOME/.config/opencode/AGENTS.md" ;;
+    "$HOME/.cursor/skills")
+      if is_owned_rule_file "$HOME/.cursor/rules/dopamine-talk.mdc"; then
+        rm -f "$HOME/.cursor/rules/dopamine-talk.mdc"
+        echo "  ${GREEN}✓${RESET} removed  $HOME/.cursor/rules/dopamine-talk.mdc"
+        return 0
+      fi
+      return 1 ;;
+    "$HOME/.kiro/skills")
+      if is_owned_rule_file "$HOME/.kiro/steering/dopamine-talk.md"; then
+        rm -f "$HOME/.kiro/steering/dopamine-talk.md"
+        echo "  ${GREEN}✓${RESET} removed  $HOME/.kiro/steering/dopamine-talk.md"
+        return 0
+      fi
+      return 1 ;;
+  esac
+
+  [[ -n "$rf" ]] || return 1
+  local removed=0
+  if remove_marked_block "$rf"; then
+    echo "  ${GREEN}✓${RESET} cleaned  $rf"
+    removed=1
+  fi
+  if [[ "$target" == "$HOME/.gemini/config/skills" ]] && is_owned_rule_file "$HOME/.gemini/config/rules/dopamine-talk.md"; then
+    rm -f "$HOME/.gemini/config/rules/dopamine-talk.md"
+    echo "  ${GREEN}✓${RESET} removed  $HOME/.gemini/config/rules/dopamine-talk.md"
+    removed=1
+  fi
+  [[ $removed -eq 1 ]]
 }
 
 # --- MODE: STATUS ---
@@ -439,7 +705,7 @@ if [[ "$MODE" == "status" ]]; then
     [[ -d "$dir" ]] || continue
     for s in dopamine-talk dopamine-readme dopamine-changelog; do
       p="$dir/$s"
-      if [[ -L "$p" || -d "$p" ]]; then
+      if [[ -L "$p" ]] || { [[ -d "$p" ]] && is_dopamine_skill_dir "$p" "$s"; }; then
         found_any=1
         ed="$(detect_edition_from_file "$p/SKILL.md")"
         kind="copy"
@@ -454,16 +720,16 @@ if [[ "$MODE" == "status" ]]; then
   done
 
   for rf in "${KNOWN_OWNED_RULE_FILES[@]}"; do
-    if [[ -f "$rf" ]]; then
+    if is_owned_rule_file "$rf"; then
       found_any=1
       ed="$(detect_edition_from_file "$rf")"
       printf '  %s✓%s %-20s %s[%s · always-on]%s  %s\n' "$GREEN" "$RESET" "global-rule" "$CYAN" "$ed" "$RESET" "$rf"
     fi
   done
   for rf in "${KNOWN_MARKED_RULE_FILES[@]}"; do
-    if [[ -f "$rf" ]] && grep -Fq "$MARKER_START" "$rf" 2>/dev/null; then
+    if has_ordered_marked_block "$rf"; then
       found_any=1
-      ed="$(detect_edition_from_file "$rf")"
+      ed="$(detect_edition_from_block "$rf")"
       printf '  %s✓%s %-20s %s[%s · always-on]%s  %s\n' "$GREEN" "$RESET" "global-rule" "$CYAN" "$ed" "$RESET" "$rf"
     fi
   done
@@ -513,19 +779,26 @@ remove_entry() {
     rm -f "$target"
   elif [[ -d "$target" ]]; then
     rm -rf "$target"
+  elif [[ -e "$target" ]]; then
+    rm -f "$target"
   fi
 }
 
 # --- MODE: UNINSTALL ---
 if [[ "$MODE" == "uninstall" ]]; then
-  all_uninstall=0
-  if [[ ${#TARGETS[@]} -eq 0 ]]; then
-    all_uninstall=1
+  explicit_targets=0
+  if [[ ${#TARGETS[@]} -gt 0 ]]; then
+    explicit_targets=1
+  else
     for d in "${KNOWN_AGENT_DIRS[@]}"; do
       add_target_unique "$d"
     done
   fi
-  if [[ ${#SELECTED_SKILLS[@]} -eq 0 ]]; then
+
+  explicit_skills=0
+  if [[ ${#SELECTED_SKILLS[@]} -gt 0 ]]; then
+    explicit_skills=1
+  else
     SELECTED_SKILLS=("dopamine-talk" "dopamine-readme" "dopamine-changelog")
   fi
 
@@ -536,30 +809,60 @@ if [[ "$MODE" == "uninstall" ]]; then
     [[ -d "$dir" ]] || continue
     for s in "${SELECTED_SKILLS[@]}"; do
       p="$dir/$s"
-      if [[ -L "$p" || -d "$p" ]]; then
-        if [[ -f "$p/SKILL.md" || -L "$p" ]]; then
-          remove_entry "$p"
-          echo "  ${GREEN}✓${RESET} removed  $p"
-          removed=$((removed + 1))
-        fi
+      # Remove our symlink or a verified Dopamine Talk directory. An unrelated
+      # file or a same-named directory with a foreign SKILL.md is not ours.
+      if [[ -L "$p" ]]; then
+        remove_entry "$p"
+        echo "  ${GREEN}✓${RESET} removed  $p"
+        removed=$((removed + 1))
+      elif [[ -d "$p" ]] && is_dopamine_skill_dir "$p" "$s"; then
+        remove_entry "$p"
+        echo "  ${GREEN}✓${RESET} removed  $p"
+        removed=$((removed + 1))
       fi
     done
   done
 
-  if [[ $all_uninstall -eq 1 ]]; then
-    for rf in "${KNOWN_OWNED_RULE_FILES[@]}"; do
-      if [[ -f "$rf" ]]; then
-        rm -f "$rf"
-        echo "  ${GREEN}✓${RESET} removed  $rf"
-        removed=$((removed + 1))
-      fi
-    done
-    for rf in "${KNOWN_MARKED_RULE_FILES[@]}"; do
-      if remove_marked_block "$rf"; then
-        echo "  ${GREEN}✓${RESET} cleaned  $rf"
-        removed=$((removed + 1))
-      fi
-    done
+  # Rules are pack-wide: clean them only for a full pack uninstall (no --skills
+  # filter, or all three skills selected). A partial skill removal keeps the
+  # always-on rules so the remaining skills stay active.
+  remove_rules=0
+  if [[ $explicit_skills -eq 0 || ${#SELECTED_SKILLS[@]} -eq 3 ]]; then
+    remove_rules=1
+  fi
+
+  if [[ $remove_rules -eq 1 ]]; then
+    if [[ $explicit_targets -eq 0 ]]; then
+      for rf in "${KNOWN_OWNED_RULE_FILES[@]}"; do
+        if is_owned_rule_file "$rf"; then
+          rm -f "$rf"
+          echo "  ${GREEN}✓${RESET} removed  $rf"
+          removed=$((removed + 1))
+        fi
+      done
+      for rf in "${KNOWN_MARKED_RULE_FILES[@]}"; do
+        if remove_marked_block "$rf"; then
+          echo "  ${GREEN}✓${RESET} cleaned  $rf"
+          removed=$((removed + 1))
+        fi
+      done
+    else
+      for dir in "${TARGETS[@]}"; do
+        if remove_global_rule_for_target "$dir"; then
+          removed=$((removed + 1))
+        fi
+      done
+    fi
+  fi
+
+  # `--rules [DIR]` writes a marker block into a project AGENTS.md; honor the
+  # same option on uninstall so that block can be removed again.
+  if [[ $remove_rules -eq 1 && $INSTALL_LOCAL_RULES -eq 1 ]]; then
+    rules_dst="${RULES_DIR%/}/AGENTS.md"
+    if remove_marked_block "$rules_dst"; then
+      echo "  ${GREEN}✓${RESET} cleaned  $rules_dst"
+      removed=$((removed + 1))
+    fi
   fi
 
   if [[ $removed -eq 0 ]]; then
@@ -699,6 +1002,11 @@ if [[ ${#TARGETS[@]} -eq 0 ]]; then
   fi
 fi
 
+if [[ ${#TARGETS[@]} -eq 0 ]]; then
+  echo "${RED}error:${RESET} no install target selected (use --claude, --codex, --dir PATH, --all-agents, or an interactive pick)" >&2
+  exit 2
+fi
+
 # Step 4: Always-On Global Rules (so the agent actually uses Dopamine Talk in every chat!)
 if [[ "$GLOBAL_RULES" == "ask" ]]; then
   if [[ $CAN_PROMPT -eq 1 ]]; then
@@ -812,29 +1120,35 @@ for skill in "${SELECTED_SKILLS[@]}"; do
     mkdir -p "$target"
     dst="$target/$skill"
 
-    if [[ -L "$dst" || -e "$dst" ]]; then
-      if [[ $FORCE -eq 1 || $ASSUME_YES -eq 1 ]]; then
+    if [[ -L "$dst" ]]; then
+      if [[ $FORCE -eq 1 ]]; then
         remove_entry "$dst"
-      elif [[ -L "$dst" ]]; then
+      else
         cur_link="$(readlink "$dst" 2>/dev/null || true)"
-        if [[ "$cur_link" == *"dopamine-talk"* || "$cur_link" == *"dopamine-readme"* || "$cur_link" == *"dopamine-changelog"* ]]; then
+        if [[ "$cur_link" == *"dopamine-talk"* || "$cur_link" == *"dopamine-readme"* || "$cur_link" == *"dopamine-changelog"* ]] || is_dopamine_skill_dir "$dst" "$skill"; then
           remove_entry "$dst"
         else
           echo "  ${AMBER}!${RESET} skip     $dst ${DIM}(symlink to unrelated path — pass --force to replace)${RESET}" >&2
           skipped=$((skipped + 1))
           continue
         fi
+      fi
+    elif [[ -e "$dst" ]]; then
+      if [[ $FORCE -eq 1 ]]; then
+        remove_entry "$dst"
+      elif [[ $CAN_PROMPT -eq 1 ]]; then
+        existing_ed="$(detect_edition_from_file "$dst/SKILL.md")"
+        ans="$(prompt_line "  ${AMBER}!${RESET} $dst already exists [${existing_ed}]. Overwrite? [Y/n]: ")"
+        case "$(lower "${ans:-y}")" in
+          y|yes|д|да) remove_entry "$dst" ;;
+          *) skipped=$((skipped + 1)); continue ;;
+        esac
+      elif is_dopamine_skill_dir "$dst" "$skill"; then
+        remove_entry "$dst"
       else
-        if [[ $CAN_PROMPT -eq 1 ]]; then
-          existing_ed="$(detect_edition_from_file "$dst/SKILL.md")"
-          ans="$(prompt_line "  ${AMBER}!${RESET} $dst already exists [${existing_ed}]. Overwrite? [Y/n]: ")"
-          case "$(lower "${ans:-y}")" in
-            y|yes|д|да) remove_entry "$dst" ;;
-            *) skipped=$((skipped + 1)); continue ;;
-          esac
-        else
-          remove_entry "$dst"
-        fi
+        echo "  ${AMBER}!${RESET} skip     $dst ${DIM}(exists and is not a verified Dopamine Talk install — pass --force to replace)${RESET}" >&2
+        skipped=$((skipped + 1))
+        continue
       fi
     fi
 
