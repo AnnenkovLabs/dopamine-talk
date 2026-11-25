@@ -479,7 +479,7 @@ is_owned_rule_file() {
     "$HOME/.cursor/rules/dopamine-talk.mdc")
       grep -Fq 'description: Dopamine Talk' "$f" 2>/dev/null &&
         grep -Fq 'alwaysApply: true' "$f" 2>/dev/null ;;
-    "$HOME/.kiro/steering/dopamine-talk.md")
+    "$HOME/.kiro/steering/dopamine-talk.md"|"$HOME/.gemini/config/rules/dopamine-talk.md")
       grep -Fq '# Dopamine Talk' "$f" 2>/dev/null &&
         { grep -Fq '## Core Rules' "$f" 2>/dev/null ||
           grep -Fq '## Пять главных правил' "$f" 2>/dev/null; } ;;

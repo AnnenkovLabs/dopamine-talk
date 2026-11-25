@@ -181,12 +181,14 @@ if [[ -d "$home/.claude/skills/dopamine-readme" ]]; then ok; else fail "uninstal
 # 5c. Owned rule files are deleted only when they carry the installer's
 #     signature; a same-named user file survives.
 home="$(new_home owned-unrelated)"
-mkdir -p "$home/.cursor/rules" "$home/.kiro/steering"
+mkdir -p "$home/.cursor/rules" "$home/.kiro/steering" "$home/.gemini/config/rules"
 printf 'user cursor\n' > "$home/.cursor/rules/dopamine-talk.mdc"
 printf 'user kiro\n' > "$home/.kiro/steering/dopamine-talk.md"
+printf 'user gemini\n' > "$home/.gemini/config/rules/dopamine-talk.md"
 run_installer "$home" --uninstall >/dev/null 2>&1
 assert_contains "$home/.cursor/rules/dopamine-talk.mdc" "user cursor" "uninstall leaves a foreign Cursor rule file"
 assert_contains "$home/.kiro/steering/dopamine-talk.md" "user kiro" "uninstall leaves a foreign Kiro rule file"
+assert_contains "$home/.gemini/config/rules/dopamine-talk.md" "user gemini" "uninstall leaves a foreign Gemini rule file"
 status_out="$(run_installer "$home" --status 2>/dev/null)"
 case "$status_out" in
   *"global-rule"*) fail "status must not report foreign owned rule files" ;;
@@ -194,12 +196,14 @@ case "$status_out" in
 esac
 
 home="$(new_home owned-installed)"
-run_installer "$home" --lang en --cursor --kiro --yes --copy --global-rules >/dev/null 2>&1
+run_installer "$home" --lang en --cursor --kiro --gemini --yes --copy --global-rules >/dev/null 2>&1
 assert_file "$home/.cursor/rules/dopamine-talk.mdc" "Cursor owned rule is installed"
 assert_file "$home/.kiro/steering/dopamine-talk.md" "Kiro owned rule is installed"
+assert_file "$home/.gemini/config/rules/dopamine-talk.md" "Gemini owned rule is installed"
 run_installer "$home" --uninstall >/dev/null 2>&1
 assert_missing "$home/.cursor/rules/dopamine-talk.mdc" "uninstall removes the installed Cursor rule"
 assert_missing "$home/.kiro/steering/dopamine-talk.md" "uninstall removes the installed Kiro rule"
+assert_missing "$home/.gemini/config/rules/dopamine-talk.md" "uninstall removes the installed Gemini rule"
 
 # 6. Project AGENTS.md installed with --rules can be removed with --rules.
 home="$(new_home project)"
