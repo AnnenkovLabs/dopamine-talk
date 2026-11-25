@@ -40,7 +40,7 @@ $RepoSlug = "AnnenkovLabs/dopamine-talk"
 $ZipUrl = "https://github.com/$RepoSlug/archive/refs/heads/main.zip"
 $MarkerStart = "<!-- dopamine-talk:start -->"
 $MarkerEnd = "<!-- dopamine-talk:end -->"
-$HomeDir = $env:USERPROFILE
+$HomeDir = if ($env:USERPROFILE) { $env:USERPROFILE } else { $HOME }
 
 $KnownAgents = @(
   @{ Name = "Universal (Antigravity, OpenCode, Cline, Pi)"; Probe = (Join-Path $HomeDir ".agents"); Skills = (Join-Path $HomeDir ".agents\skills"); RuleKind = "marked"; RulePath = (Join-Path $HomeDir ".agents\AGENTS.md") },
