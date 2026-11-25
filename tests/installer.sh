@@ -178,6 +178,24 @@ assert_contains "$home/.claude/skills/dopamine-talk/SKILL.md" "name: someone-els
 assert_contains "$home/.claude/skills/dopamine-changelog" "KEEP FILE" "uninstall leaves a same-named regular file"
 if [[ -d "$home/.claude/skills/dopamine-readme" ]]; then ok; else fail "uninstall leaves an empty same-named directory"; fi
 
+# 5c. Owned rule files are deleted only when they carry the installer's
+#     signature; a same-named user file survives.
+home="$(new_home owned-unrelated)"
+mkdir -p "$home/.cursor/rules" "$home/.kiro/steering"
+printf 'user cursor\n' > "$home/.cursor/rules/dopamine-talk.mdc"
+printf 'user kiro\n' > "$home/.kiro/steering/dopamine-talk.md"
+run_installer "$home" --uninstall >/dev/null 2>&1
+assert_contains "$home/.cursor/rules/dopamine-talk.mdc" "user cursor" "uninstall leaves a foreign Cursor rule file"
+assert_contains "$home/.kiro/steering/dopamine-talk.md" "user kiro" "uninstall leaves a foreign Kiro rule file"
+
+home="$(new_home owned-installed)"
+run_installer "$home" --lang en --cursor --kiro --yes --copy --global-rules >/dev/null 2>&1
+assert_file "$home/.cursor/rules/dopamine-talk.mdc" "Cursor owned rule is installed"
+assert_file "$home/.kiro/steering/dopamine-talk.md" "Kiro owned rule is installed"
+run_installer "$home" --uninstall >/dev/null 2>&1
+assert_missing "$home/.cursor/rules/dopamine-talk.mdc" "uninstall removes the installed Cursor rule"
+assert_missing "$home/.kiro/steering/dopamine-talk.md" "uninstall removes the installed Kiro rule"
+
 # 6. Project AGENTS.md installed with --rules can be removed with --rules.
 home="$(new_home project)"
 mkdir -p "$home/project"

@@ -470,6 +470,23 @@ is_dopamine_skill_dir() {
   grep -Eq "^name:[[:space:]]*${skill}[[:space:]]*$" "$dir/SKILL.md" 2>/dev/null
 }
 
+# A file is ours only when it carries the exact signature written by this
+# installer. A same-named user file is never deleted on uninstall.
+is_owned_rule_file() {
+  local f="$1"
+  [[ -f "$f" ]] || return 1
+  case "$f" in
+    "$HOME/.cursor/rules/dopamine-talk.mdc")
+      grep -Fq 'description: Dopamine Talk' "$f" 2>/dev/null &&
+        grep -Fq 'alwaysApply: true' "$f" 2>/dev/null ;;
+    "$HOME/.kiro/steering/dopamine-talk.md")
+      grep -Fq '# Dopamine Talk' "$f" 2>/dev/null &&
+        { grep -Fq '## Core Rules' "$f" 2>/dev/null ||
+          grep -Fq '## Пять главных правил' "$f" 2>/dev/null; } ;;
+    *) return 1 ;;
+  esac
+}
+
 write_cursor_mdc() {
   local dst="$1"
   local src="$2"
@@ -599,14 +616,14 @@ remove_global_rule_for_target() {
     "$HOME/.copilot/skills")                  rf="$HOME/.copilot/copilot-instructions.md" ;;
     "$HOME/.config/opencode/skills")          rf="$HOME/.config/opencode/AGENTS.md" ;;
     "$HOME/.cursor/skills")
-      if [[ -f "$HOME/.cursor/rules/dopamine-talk.mdc" ]]; then
+      if is_owned_rule_file "$HOME/.cursor/rules/dopamine-talk.mdc"; then
         rm -f "$HOME/.cursor/rules/dopamine-talk.mdc"
         echo "  ${GREEN}✓${RESET} removed  $HOME/.cursor/rules/dopamine-talk.mdc"
         return 0
       fi
       return 1 ;;
     "$HOME/.kiro/skills")
-      if [[ -f "$HOME/.kiro/steering/dopamine-talk.md" ]]; then
+      if is_owned_rule_file "$HOME/.kiro/steering/dopamine-talk.md"; then
         rm -f "$HOME/.kiro/steering/dopamine-talk.md"
         echo "  ${GREEN}✓${RESET} removed  $HOME/.kiro/steering/dopamine-talk.md"
         return 0
@@ -655,7 +672,7 @@ if [[ "$MODE" == "status" ]]; then
   done
 
   for rf in "${KNOWN_OWNED_RULE_FILES[@]}"; do
-    if [[ -f "$rf" ]]; then
+    if is_owned_rule_file "$rf"; then
       found_any=1
       ed="$(detect_edition_from_file "$rf")"
       printf '  %s✓%s %-20s %s[%s · always-on]%s  %s\n' "$GREEN" "$RESET" "global-rule" "$CYAN" "$ed" "$RESET" "$rf"
@@ -769,7 +786,7 @@ if [[ "$MODE" == "uninstall" ]]; then
   if [[ $remove_rules -eq 1 ]]; then
     if [[ $explicit_targets -eq 0 ]]; then
       for rf in "${KNOWN_OWNED_RULE_FILES[@]}"; do
-        if [[ -f "$rf" ]]; then
+        if is_owned_rule_file "$rf"; then
           rm -f "$rf"
           echo "  ${GREEN}✓${RESET} removed  $rf"
           removed=$((removed + 1))
