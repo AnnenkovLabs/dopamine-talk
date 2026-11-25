@@ -92,6 +92,16 @@ function Test-DopamineSkill([string]$Path, [string]$SkillName) {
 
 # Remove a skill directory without following a symlink/junction into its target.
 # Windows PowerShell 5.1's Remove-Item -Recurse is known to delete link targets.
+# A path is safe to uninstall only when it is a link (removing the link does not
+# touch its target) or a directory whose SKILL.md declares the expected name.
+function Test-InstalledSkillPath([string]$Path, [string]$SkillName) {
+  $item = Get-Item -LiteralPath $Path -Force -ErrorAction SilentlyContinue
+  if (-not $item) { return $false }
+  if ($item.Attributes -band [System.IO.FileAttributes]::ReparsePoint) { return $true }
+  if (-not $item.PSIsContainer) { return $false }
+  return (Test-DopamineSkill $Path $SkillName)
+}
+
 function Remove-SkillPath([string]$Path) {
   $item = Get-Item -LiteralPath $Path -Force -ErrorAction SilentlyContinue
   if (-not $item) { return }
@@ -264,7 +274,7 @@ if ($Uninstall) {
   foreach ($a in $targets) {
     foreach ($s in $skillsToRemove) {
       $p = Join-Path $a.Skills $s
-      if (Test-Path -LiteralPath $p) {
+      if (Test-InstalledSkillPath $p $s) {
         Remove-SkillPath $p
         Write-Host "  [OK] removed  $p" -ForegroundColor Green
         $removed++
@@ -277,7 +287,7 @@ if ($Uninstall) {
   if ($Dir) {
     foreach ($s in $skillsToRemove) {
       $p = Join-Path $Dir $s
-      if (Test-Path -LiteralPath $p) {
+      if (Test-InstalledSkillPath $p $s) {
         Remove-SkillPath $p
         Write-Host "  [OK] removed  $p" -ForegroundColor Green
         $removed++
