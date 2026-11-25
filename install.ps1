@@ -449,6 +449,13 @@ foreach ($a in $selectedAgents) {
 $selectedAgents = $dedupedAgents
 if ($selectedAgents.Count -eq 0 -and -not $Dir) { throw "No target agents selected. Use -Claude, -Codex, -Dir PATH, -AllAgents, or pick at least one number." }
 
+# Deduplicate targets selected by more than one switch, e.g. -AllAgents -Claude.
+$dedupedAgents = @()
+foreach ($a in $selectedAgents) {
+  if (-not ($dedupedAgents | Where-Object { $_.Skills -eq $a.Skills })) { $dedupedAgents += $a }
+}
+$selectedAgents = $dedupedAgents
+
 $enableGlobalRules = -not $NoGlobalRules
 if (-not $Yes -and -not $NoGlobalRules) {
   $q = if ($edition -eq "ru") { "3. Включить всегда по умолчанию в CLAUDE.md / AGENTS.md / GEMINI.md? [Y/n]" } else { "3. Enable always-on mode globally (CLAUDE.md / AGENTS.md / GEMINI.md)? [Y/n]" }
@@ -479,6 +486,11 @@ try {
   if ($Dir) {
     $targetList += @{ Name = "Custom"; Skills = $Dir; RuleKind = "none"; RulePath = "" }
   }
+  $dedupedTargets = @()
+  foreach ($t in $targetList) {
+    if (-not ($dedupedTargets | Where-Object { $_.Skills -eq $t.Skills })) { $dedupedTargets += $t }
+  }
+  $targetList = $dedupedTargets
 
   foreach ($a in $targetList) {
     if (-not (Test-Path $a.Skills)) { New-Item -ItemType Directory -Path $a.Skills -Force | Out-Null }
