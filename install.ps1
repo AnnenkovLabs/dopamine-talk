@@ -284,7 +284,7 @@ if ($Status) {
   foreach ($a in $KnownAgents) {
     foreach ($s in @("dopamine-talk", "dopamine-readme", "dopamine-changelog")) {
       $p = Join-Path $a.Skills $s
-      if (Test-Path $p) {
+      if (Test-InstalledSkillPath $p $s) {
         $found = $true
         $ed = Detect-Edition (Join-Path $p "SKILL.md")
         Write-Host ("  [OK] {0,-20} [{1}]  {2}" -f $s, $ed, $p) -ForegroundColor Green
