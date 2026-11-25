@@ -55,6 +55,12 @@ $KnownAgents = @(
 )
 
 function Write-Utf8NoBom([string]$Path, [string]$Content) {
+  # Never follow a symlink/junction into its target. Replace the link with a
+  # regular file, leaving the target untouched.
+  $item = Get-Item -LiteralPath $Path -Force -ErrorAction SilentlyContinue
+  if ($item -and ($item.Attributes -band [System.IO.FileAttributes]::ReparsePoint)) {
+    Remove-SkillPath $Path
+  }
   $parent = Split-Path -Parent $Path
   if ($parent -and -not (Test-Path $parent)) { New-Item -ItemType Directory -Path $parent -Force | Out-Null }
   $utf8 = New-Object System.Text.UTF8Encoding($false)
