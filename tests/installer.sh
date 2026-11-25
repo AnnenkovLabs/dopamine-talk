@@ -226,6 +226,15 @@ run_installer "$home" --uninstall --claude >/dev/null 2>&1
 assert_contains "$home/.claude/CLAUDE.md" "USER BEFORE" "uninstall preserves text after a lone start"
 assert_contains "$home/.claude/CLAUDE.md" "USER AFTER" "uninstall preserves text after the block"
 
+# 5c2b. An empty --skills list is rejected instead of silently selecting all.
+home="$(new_home empty-skills)"
+if run_installer "$home" --lang en --claude --yes --copy --skills , >/dev/null 2>&1; then
+  fail "empty --skills list must fail"
+else
+  ok
+fi
+if [[ ! -e "$home/.claude/skills/dopamine-talk" ]]; then ok; else fail "empty --skills list must not install anything"; fi
+
 # 5c3. Rewriting a marked rule preserves its mode; a new one is not left 0600.
 home="$(new_home mode-preserve)"
 mkdir -p "$home/.claude"

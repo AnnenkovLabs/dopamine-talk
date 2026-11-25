@@ -164,9 +164,11 @@ while [[ $# -gt 0 ]]; do
     --skills)
       [[ $# -ge 2 ]] || { echo "${RED}error:${RESET} --skills requires a value" >&2; exit 2; }
       IFS=',' read -r -a _parts <<< "$2"
+      _skills_seen=0
       for _p in "${_parts[@]}"; do
         _p="$(printf '%s' "$_p" | tr -d '[:space:]')"
         [[ -z "$_p" ]] && continue
+        _skills_seen=1
         _norm="$(normalize_skill_name "$_p")" || { echo "${RED}error:${RESET} unknown skill '$_p'" >&2; exit 2; }
         if [[ "$_norm" == "ALL" ]]; then
           add_skill_unique "dopamine-talk"
@@ -176,6 +178,7 @@ while [[ $# -gt 0 ]]; do
           add_skill_unique "$_norm"
         fi
       done
+      [[ $_skills_seen -eq 1 ]] || { echo "${RED}error:${RESET} --skills requires at least one skill" >&2; exit 2; }
       shift ;;
     --agents)      add_target_unique "$HOME/.agents/skills" ;;
     --claude)      add_target_unique "$HOME/.claude/skills" ;;
