@@ -177,6 +177,11 @@ run_installer "$home" --uninstall --claude >/dev/null 2>&1
 assert_contains "$home/.claude/skills/dopamine-talk/SKILL.md" "name: someone-else" "uninstall leaves a foreign SKILL.md directory"
 assert_contains "$home/.claude/skills/dopamine-changelog" "KEEP FILE" "uninstall leaves a same-named regular file"
 if [[ -d "$home/.claude/skills/dopamine-readme" ]]; then ok; else fail "uninstall leaves an empty same-named directory"; fi
+status_out="$(run_installer "$home" --status 2>/dev/null)"
+case "$status_out" in
+  *"dopamine-talk"*) fail "status must not report a foreign skill directory" ;;
+  *) ok ;;
+esac
 
 # 5c. Owned rule files are deleted only when they carry the installer's
 #     signature; a same-named user file survives.

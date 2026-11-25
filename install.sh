@@ -684,7 +684,7 @@ if [[ "$MODE" == "status" ]]; then
     [[ -d "$dir" ]] || continue
     for s in dopamine-talk dopamine-readme dopamine-changelog; do
       p="$dir/$s"
-      if [[ -L "$p" || -d "$p" ]]; then
+      if [[ -L "$p" ]] || { [[ -d "$p" ]] && is_dopamine_skill_dir "$p" "$s"; }; then
         found_any=1
         ed="$(detect_edition_from_file "$p/SKILL.md")"
         kind="copy"
