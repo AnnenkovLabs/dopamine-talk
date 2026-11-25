@@ -187,6 +187,11 @@ printf 'user kiro\n' > "$home/.kiro/steering/dopamine-talk.md"
 run_installer "$home" --uninstall >/dev/null 2>&1
 assert_contains "$home/.cursor/rules/dopamine-talk.mdc" "user cursor" "uninstall leaves a foreign Cursor rule file"
 assert_contains "$home/.kiro/steering/dopamine-talk.md" "user kiro" "uninstall leaves a foreign Kiro rule file"
+status_out="$(run_installer "$home" --status 2>/dev/null)"
+case "$status_out" in
+  *"global-rule"*) fail "status must not report foreign owned rule files" ;;
+  *) ok ;;
+esac
 
 home="$(new_home owned-installed)"
 run_installer "$home" --lang en --cursor --kiro --yes --copy --global-rules >/dev/null 2>&1
