@@ -240,6 +240,16 @@ assert_contains "$home/target.md" "TARGET SAFE" "install does not write through 
 if [[ ! -L "$home/.claude/CLAUDE.md" ]]; then ok; else fail "install replaces the symlinked rule with a regular file"; fi
 assert_count "$home/.claude/CLAUDE.md" "<!-- dopamine-talk:start -->" 1 "replaced symlink contains the rule block"
 
+# 5f. Status does not call a lone start marker an active rule.
+home="$(new_home lone-marker-status)"
+mkdir -p "$home/.claude"
+printf '<!-- dopamine-talk:start -->\nuser text\n' > "$home/.claude/CLAUDE.md"
+status_out="$(run_installer "$home" --status 2>/dev/null)"
+case "$status_out" in
+  *"global-rule"*) fail "status must not report a lone start marker as an active rule" ;;
+  *) ok ;;
+esac
+
 # 6. Project AGENTS.md installed with --rules can be removed with --rules.
 home="$(new_home project)"
 mkdir -p "$home/project"

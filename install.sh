@@ -706,7 +706,7 @@ if [[ "$MODE" == "status" ]]; then
     fi
   done
   for rf in "${KNOWN_MARKED_RULE_FILES[@]}"; do
-    if [[ -f "$rf" ]] && grep -Fq "$MARKER_START" "$rf" 2>/dev/null; then
+    if has_ordered_marked_block "$rf"; then
       found_any=1
       ed="$(detect_edition_from_block "$rf")"
       printf '  %s✓%s %-20s %s[%s · always-on]%s  %s\n' "$GREEN" "$RESET" "global-rule" "$CYAN" "$ed" "$RESET" "$rf"
