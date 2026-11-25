@@ -189,7 +189,7 @@ Dopamine Talk родился не из сухой теории промпт-ин
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="../../assets/readme/editions-ru-dark.svg">
     <source media="(prefers-color-scheme: light)" srcset="../../assets/readme/editions-ru-light.svg">
-    <img src="../../assets/readme/editions-ru-dark.svg" alt="Схема двух родных версий (две хрустальные карточки с иконкой мгновенного переключения посередине). Левая карточка [ОРИГИНАЛЬНЫЙ ПАК АВТОРА · Русская версия]: папки skills-ru/ и AGENTS.ru.md; все 6 рефлексов RLVR из оригинального пака; анти-Runglish фильтр лечит англо-русскую кашу; триггеры «дофаминовое общение», «без воды». Правая карточка [ЗАПАДНАЯ АДАПТАЦИЯ · Western English]: папки skills/ и AGENTS.md; 5 рефлексов RLVR + анти-корпоративный ИИ-слоп; никакого лишнего багажа про Runglish в промптах; триггеры 'dopamine-talk', 'no fluff', 'drop hedging'. Нижняя плашка: Одинаковые имена скиллов, свитч за 1 секунду командой ./install.sh --lang ru|en --force." width="840">
+    <img src="../../assets/readme/editions-ru-dark.svg" alt="Схема двух родных версий (две хрустальные карточки с иконкой мгновенного переключения посередине). Левая карточка [ОРИГИНАЛЬНЫЙ ПАК АВТОРА · Русская версия]: папки skills-ru/ и docs/i18n/AGENTS.ru.md; все 6 рефлексов RLVR из оригинального пака; анти-Runglish фильтр лечит англо-русскую кашу; триггеры «дофаминовое общение», «без воды». Правая карточка [ЗАПАДНАЯ АДАПТАЦИЯ · Western English]: папки skills/ и AGENTS.md; 5 рефлексов RLVR + анти-корпоративный ИИ-слоп; никакого лишнего багажа про Runglish в промптах; триггеры 'dopamine-talk', 'no fluff', 'drop hedging'. Нижняя плашка: Одинаковые имена скиллов, свитч за 1 секунду командой ./install.sh --lang ru|en --force." width="840">
   </picture>
 </p>
 

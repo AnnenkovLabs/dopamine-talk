@@ -15,7 +15,7 @@ Both editions expose the exact same clean skill names (`dopamine-talk`, `dopamin
 
 | Host | Files Read | Install Path |
 | --- | --- | --- |
-| **Interactive Installer** (EN & RU) | `skills/` or `skills-ru/`, `AGENTS.md` or `AGENTS.ru.md` | `curl -fsSL https://raw.githubusercontent.com/AnnenkovLabs/dopamine-talk/main/install.sh \| bash` |
+| **Interactive Installer** (EN & RU) | `skills/` or `skills-ru/`, `AGENTS.md` or `docs/i18n/AGENTS.ru.md` | `curl -fsSL https://raw.githubusercontent.com/AnnenkovLabs/dopamine-talk/main/install.sh \| bash` |
 | `npx skills` (20+ agents, EN) | `skills/*/SKILL.md` | `npx skills add AnnenkovLabs/dopamine-talk` |
 | Claude Code / CodeBuddy (EN & RU) | `.claude-plugin/marketplace.json`, `.claude-plugin/plugin.json` | `/plugin install dopamine-talk@dopamine-talk` or `dopamine-talk-ru@dopamine-talk` |
 | Codex CLI & Desktop | `.agents/plugins/marketplace.json`, `.codex-plugin/plugin.json`, `skills/`, `assets/icon.png` | `codex plugin marketplace add AnnenkovLabs/dopamine-talk` + `codex plugin add dopamine-talk@dopamine-talk` |
