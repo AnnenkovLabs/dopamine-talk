@@ -21,5 +21,7 @@ jobs:
         run: node tests/text-encoding.mjs
       - name: Local links & assets
         run: node tests/links.mjs
+      - name: Installer regression tests
+        run: bash tests/installer.sh
       - name: Shell script syntax
         run: bash -n install.sh
