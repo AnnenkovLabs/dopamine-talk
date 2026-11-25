@@ -225,6 +225,16 @@ assert_missing "$home/.cursor/rules/dopamine-talk.mdc" "uninstall removes the fo
 assert_missing "$home/.kiro/steering/dopamine-talk.md" "uninstall removes the forced Kiro rule"
 assert_missing "$home/.gemini/config/rules/dopamine-talk.md" "uninstall removes the forced Gemini rule"
 
+# 5e. A symlinked rule file is replaced, never written through to its target.
+home="$(new_home symlink-rule)"
+mkdir -p "$home/.claude"
+printf 'TARGET SAFE\n' > "$home/target.md"
+ln -s "$home/target.md" "$home/.claude/CLAUDE.md"
+run_installer "$home" --lang en --claude --yes --copy --global-rules >/dev/null 2>&1
+assert_contains "$home/target.md" "TARGET SAFE" "install does not write through a symlinked rule"
+if [[ ! -L "$home/.claude/CLAUDE.md" ]]; then ok; else fail "install replaces the symlinked rule with a regular file"; fi
+assert_count "$home/.claude/CLAUDE.md" "<!-- dopamine-talk:start -->" 1 "replaced symlink contains the rule block"
+
 # 6. Project AGENTS.md installed with --rules can be removed with --rules.
 home="$(new_home project)"
 mkdir -p "$home/project"
