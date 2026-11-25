@@ -45,8 +45,10 @@ curl -fsSL https://dopamine.annenkov.me/install.sh | bash -s -- --lang ru --clau
 # Skills only (skip global always-on CLAUDE.md / AGENTS.md rules)
 curl -fsSL https://dopamine.annenkov.me/install.sh | bash -s -- --lang en --no-global-rules --yes
 
-# Switch EN <-> RU anytime
-curl -fsSL https://dopamine.annenkov.me/install.sh | bash -s -- --lang ru --force --yes
+# Switch EN <-> RU anytime (verified Dopamine Talk copies upgrade in place)
+curl -fsSL https://dopamine.annenkov.me/install.sh | bash -s -- --lang ru --yes
+
+# Use --force only to replace a same-named path that is not a verified install
 
 # Check active edition, skills, and global always-on rules
 curl -fsSL https://dopamine.annenkov.me/install.sh | bash -s -- --status
