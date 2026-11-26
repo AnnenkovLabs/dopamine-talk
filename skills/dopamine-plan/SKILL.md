@@ -7,10 +7,11 @@ description: >-
   competitor and best-in-class open-source recon before designing so you never
   ship dated AI slop, pushes research and frontier projects toward cutting-edge
   experimental methods instead of safe legacy defaults, enforces 80/20 focus,
-  builds flexible zero-hardcode / zero-regex architectures, and ships vertical
-  full-strength milestones on one clean screen. Triggers: "dopamine-plan",
-  "dopamine plan", "plan this", "architecture plan", "implementation plan",
-  "design the architecture".
+  kills the modern LLM obsession with unasked critic-gates, verification layers,
+  and checkbox test phases, builds flexible zero-hardcode / zero-regex
+  architectures, and ships vertical full-strength milestones on one clean
+  screen. Triggers: "dopamine-plan", "dopamine plan", "plan this",
+  "architecture plan", "implementation plan", "design the architecture".
 license: MIT
 ---
 
@@ -28,18 +29,20 @@ CORE MODE DIRECTIVES:
 2. **Recon BEFORE blueprinting:** Before designing a product, tool, or agent, study strong competitors and best-in-class open-source equivalents so you never ship dated AI slop from a vacuum. For research or frontier projects, seek **the latest experimental papers and repos**, never safe legacy defaults from memory.
 3. **Zero hardcode, zero regex crutches in the foundation:** Architect universal, adaptive mechanisms and a tight, strong core instead of fragile regexes, hardcoded rule lists, or 7-layer over-orchestrated pipelines.
 4. **80/20 focus and domain-native contrast:** Spend 80% of the plan's depth on the core leverage and killer mechanic; keep commodity plumbing invisible. Express architectural gains in the project's real metrics (`Before -> After`, labeled **In theory:**) with zero apologetic caveats.
+5. **Zero critic-gates and verification/testing obsession:** Switch off the modern RLVR reflex to stuff every plan with critic agents, reviewer loops, approval gates, verification layers, eval harnesses, checklists, and "write 50 unit tests" phases. Plan capabilities and leverage, not audit bureaucracy — include tests or validators only when explicitly requested or guarding genuinely critical logic (money, security, data loss).
 </active_skill>
 
 ---
 
-## 0. Six AI Planning Diseases to Kill on Sight
+## 0. Seven AI Planning Diseases to Kill on Sight
 
 1. **Human-Team Time Hallucination ("3-6 Months"):** Agents copy corporate roadmaps from 2018 filled with sprints and review committees. *Unlock:* scope in **hours, evenings, and days of agentic building** (or concrete vertical steps with zero fictional quarters).
 2. **Vacuum Architecture (Zero-Research AI Slop):** Skipping market and open-source recon produces an unusable 2023-grade prototype that misses modern UX and engineering standards — especially fatal when building AI agents, dev tools, or editors. *Unlock:* run sharp recon on top competitors and open-source leaders first, extract the real bar, and design one step past it.
 3. **Legacy Safety Bias on Frontier Projects:** Ask for real-time 3D character animation with Gaussian Splatting or a novel agentic loop, and a default model grabs an older "battle-tested" pipeline because it remembers the syntax. *Unlock:* in research or frontier builds, "old and proven" means dead on arrival. Search current papers, cutting-edge repos, and bold experimental approaches first.
 4. **Tunnel Vision & Priority Collapse:** Spending three screens on config schemas, logging, and rare edge cases while the core killer feature gets two lines. *Unlock:* enforce an 80/20 attention budget — deep thinking goes strictly to the high-leverage core.
-5. **Fragility Baked In on Paper:** Designing regex parsers for live text/code, hardcoded phrase tables, and rigid 7-step pipelines ("router -> classifier -> validator -> critic -> formatter") that shed context and snap on novel inputs. *Unlock:* universal adaptive mechanisms, real parsers/ASTs/schemas, and a short, powerful core.
-6. **400-Line Spec Walls, Scope Castration & 9-Question Interrogations:** Cutting the best ideas into "Phase 2 (Out of Scope)", listing 20 files instead of living mechanics, and stalling behind a questionnaire of trivial preferences. *Unlock:* one energizing screen, full-strength vertical milestones, bold defaults, and at most 1-2 genuine product forks.
+5. **The Auditor Reflex & Verification/Testing Obsession (RLVR / Test-Gate Conditioning):** Verifier-driven post-training made modern models obsessed with checks: instead of bold product architecture, plans bloat with critic agents, reviewer teams, approval gates, validation layers, verification loops, eval harnesses, regression matrices, and entire phases dedicated to 80 unit tests. *Unlock:* critic-gates and compulsive verification drain momentum and burn time. Never inject unasked critics, validators, or checkbox test suites — aim the plan's firepower at core capabilities and tangible payoff.
+6. **Fragility Baked In on Paper:** Designing regex parsers for live text/code, hardcoded phrase tables, and rigid 7-step pipelines ("router -> classifier -> parser -> formatter") that shed context and snap on novel inputs. *Unlock:* universal adaptive mechanisms, real parsers/ASTs/schemas, and a short, powerful core.
+7. **400-Line Spec Walls, Scope Castration & 9-Question Interrogations:** Cutting the best ideas into "Phase 2 (Out of Scope)", listing 20 files instead of living mechanics, and stalling behind a questionnaire of trivial preferences. *Unlock:* one energizing screen, full-strength vertical milestones, bold defaults, and at most 1-2 genuine product forks.
 
 ---
 
@@ -64,11 +67,11 @@ Match recon depth to the task before drawing boxes:
 ### Law 4. Adaptability Stress-Test Before Line One 🧠
 Every key module in the plan must survive two checks:
 1. **Zero hardcode / zero regex logic:** *"If tomorrow's input, model, or workflow shifts, does this adapt naturally or snap?"* Replace regexes and brittle `if`-trees with real parsers, `AST`, clean data contracts, or the model's own reasoning.
-2. **No middle-management layers:** *"Does this extra router, queue, or factory deliver a 5x win, or just burn latency and context?"* Cut every layer that doesn't earn its keep.
+2. **No critic-gates, reviewer loops, or middle-management layers:** *"Does this critic agent, approval gate, validator wrapper, or extra router deliver a 5x win, or is it just RLVR verification paranoia burning latency and context?"* Cut every unasked guard layer down to a tight, transparent core.
 
-### Law 5. Bold Defaults Over Questionnaires + Real-World Done Criteria 🚀
+### Law 5. Bold Defaults Over Questionnaires + Verification Without Test Cults 🚀
 * Never dump 8 timid clarifying questions for routine engineering calls. Pick the **strongest default**, state in one line why it beats alternatives, and surface **at most 1-2 real product forks** (only when they truly change direction).
-* End with **live battle verification** — 2-3 real scenarios we will run and inspect with our own eyes/measurements — instead of "write 40 mocked unit tests".
+* **Kill the testing and verification cult:** never pad plans with phases like *"write 50 unit/integration tests"*, *"build an eval harness"*, *"add review checklists"*, or *"hit 90% coverage"* unless explicitly asked or protecting high-stakes logic (payments, security, data integrity). Close lean — **1-2 live real-world scenarios** we run and inspect with our own eyes.
 
 ---
 
@@ -78,9 +81,9 @@ Small task -> 5-7 sharp lines and straight into code. Major system -> **one to t
 
 1. **The Hook (2-3 lines):** what we are building, the core engineering trick, and the payoff (`In theory: Before -> After` in this domain's real metric).
 2. **Recon Takeaways (3-5 lines, for products/agents/research):** top open-source/competitor standards or latest experimental methods, what we adopt, and how we leapfrog them.
-3. **Flexible Core (living flow):** how data and control move end-to-end — crisp mechanics, zero file-path dumps, zero 7-layer pipeline bloat.
+3. **Flexible Core (living flow):** how data and control move end-to-end — crisp mechanics, zero file-path dumps, zero 7-layer pipeline bloat, zero unasked critic-gates.
 4. **Vertical Milestones (3-5 steps in hours/days):** each step ships a tangible working capability.
-5. **Live Verification (2-3 real checks):** how we prove it truly works in action.
+5. **Live Sanity Check (1-2 real scenarios, zero test bureaucracy):** brief proof that it flies in action — no checkbox test phases or unasked verification gates unless requested or mission-critical.
 6. **Product Forks (0-2 max, optional):** only genuine strategic choices.
 
 ---
@@ -101,4 +104,5 @@ Before sending, check in one second:
 1. Zero "months" or corporate sprint timelines?
 2. Ran real competitor/open-source or cutting-edge research recon where it matters?
 3. 80% depth on the real lever, with zero hardcode, zero regex crutches, and no 7-layer bureaucracy?
-4. Does reading this plan make you want to start building right now?
+4. Stripped out every unasked critic-gate, reviewer agent, verification layer, and checkbox test phase?
+5. Does reading this plan make you want to start building right now?
