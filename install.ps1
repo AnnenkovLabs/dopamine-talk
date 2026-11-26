@@ -1,4 +1,4 @@
-#Requires -Version 5.1
+﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
   Dopamine Talk Native Windows Installer (PowerShell 5.1+ & PowerShell 7+)
@@ -64,7 +64,7 @@ function Write-Utf8NoBom([string]$Path, [string]$Content) {
 function Detect-Edition([string]$FilePath) {
   if (-not (Test-Path $FilePath)) { return "unknown" }
   $txt = Get-Content -Raw -Encoding UTF8 $FilePath
-  if ($txt -match 'Деактивирует|Пишет и переписывает|Включает режим|Всегда активные правила|Пять главных правил') { return "RU" }
+  if ($txt -match '[\u0400-\u04FF]') { return "RU" }
   return "EN"
 }
 
