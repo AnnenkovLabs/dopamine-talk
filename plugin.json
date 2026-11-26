@@ -1,8 +1,8 @@
 {
   "name": "dopamine-talk",
   "displayName": "Dopamine Talk",
-  "version": "1.0.0",
-  "description": "Bring back dopamine talk with AI agents — sharp, energetic, no-fluff chat, user-impact changelogs, and 5-second GitHub READMEs (EN & RU).",
+  "version": "1.1.0",
+  "description": "Bring back dopamine talk with AI agents — 5 skills for sharp chat, recon-first battle plans, adaptive zero-regex engineering & tactile UI, user-impact changelogs, and 5-second GitHub READMEs (EN & RU).",
   "logo": "assets/icon.png",
   "author": {
     "name": "AnnenkovLabs",
@@ -12,6 +12,8 @@
   "repository": "https://github.com/AnnenkovLabs/dopamine-talk",
   "suggestedPrompts": [
     "Explain the key wins of our latest diff with crisp Before -> After numbers and no caveats",
+    "Run competitor and frontier recon, then map a 2-day adaptive battle plan with zero hardcode",
+    "Build this cleanly with zero regex hacks, real-run verification, and tactile UI controls",
     "Rewrite our README.md so developers immediately grasp the killer feature in 5 seconds",
     "Turn our recent commits into user-impact release notes with Before -> After gains"
   ]

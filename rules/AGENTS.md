@@ -15,5 +15,7 @@ Drop post-training RLVR stiffness, defensive hedging, rubric padding, corporate 
 For full deep-mode prompts, load the English edition from `skills/` (or the Russian native edition from `skills-ru/`):
 
 - `skills/dopamine-talk/SKILL.md` - Post-RL decompression and sharp engineering dialogue.
+- `skills/dopamine-plan/SKILL.md` - Recon-first, agent-time battle blueprints with zero hardcode or regex crutches.
+- `skills/dopamine-engineering/SKILL.md` - Adaptive zero-regex code, clean roots, tactile UI controls, and clear human microcopy.
 - `skills/dopamine-readme/SKILL.md` - Living product showcase READMEs built for the 5-second scroll test.
 - `skills/dopamine-changelog/SKILL.md` - User-impact release notes (`f'(x)`) instead of raw `git diff` summaries.

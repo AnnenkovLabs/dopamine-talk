@@ -9,7 +9,7 @@ Dopamine Talk ships **two clean, independent skill editions** with thin zero-cod
 | **English (Western)** | [`skills/`](../skills/) | [`AGENTS.md`](../AGENTS.md) | Adapted for Western/English workflows: 5 post-RL fixes, zero corporate AI slop, zero Runglish noise |
 | **Russian (Original)** | [`skills-ru/`](../skills-ru/) | [`docs/i18n/AGENTS.ru.md`](i18n/AGENTS.ru.md) | Original native Russian edition: all 6 post-RL fixes including cross-lingual Runglish collapse protection |
 
-Both editions expose the exact same clean skill names (`dopamine-talk`, `dopamine-readme`, `dopamine-changelog`).
+Both editions expose the exact same clean skill names (`dopamine-talk`, `dopamine-plan`, `dopamine-engineering`, `dopamine-readme`, `dopamine-changelog`).
 
 ## Host Adapter Map
 

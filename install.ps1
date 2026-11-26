@@ -1,4 +1,4 @@
-﻿#Requires -Version 5.1
+#Requires -Version 5.1
 <#
 .SYNOPSIS
   Dopamine Talk Native Windows Installer (PowerShell 5.1+ & PowerShell 7+)
@@ -103,7 +103,7 @@ if ($Status) {
   Write-Host "`nDopamine Talk — Installed Status`n" -ForegroundColor Cyan
   $found = $false
   foreach ($a in $KnownAgents) {
-    foreach ($s in @("dopamine-talk", "dopamine-readme", "dopamine-changelog")) {
+    foreach ($s in @("dopamine-talk", "dopamine-plan", "dopamine-engineering", "dopamine-readme", "dopamine-changelog")) {
       $p = Join-Path $a.Skills $s
       if (Test-Path $p) {
         $found = $true
@@ -129,7 +129,7 @@ if ($Uninstall) {
   Write-Host "`nUninstalling Dopamine Talk...`n" -ForegroundColor Cyan
   $removed = 0
   foreach ($a in $KnownAgents) {
-    foreach ($s in @("dopamine-talk", "dopamine-readme", "dopamine-changelog")) {
+    foreach ($s in @("dopamine-talk", "dopamine-plan", "dopamine-engineering", "dopamine-readme", "dopamine-changelog")) {
       $p = Join-Path $a.Skills $s
       if (Test-Path $p) {
         Remove-Item -Recurse -Force $p
@@ -178,12 +178,14 @@ if ($Lang) {
 }
 
 # Skill selection
-$selectedSkills = @("dopamine-talk", "dopamine-readme", "dopamine-changelog")
+$selectedSkills = @("dopamine-talk", "dopamine-plan", "dopamine-engineering", "dopamine-readme", "dopamine-changelog")
 if ($Skills -and $Skills.ToLower() -ne "all") {
   $selectedSkills = @()
   foreach ($part in ($Skills -split ",")) {
     switch ($part.Trim().ToLower()) {
       { $_ -in @("talk", "dopamine-talk") } { $selectedSkills += "dopamine-talk" }
+      { $_ -in @("plan", "dopamine-plan") } { $selectedSkills += "dopamine-plan" }
+      { $_ -in @("eng", "engineering", "dopamine-engineering") } { $selectedSkills += "dopamine-engineering" }
       { $_ -in @("readme", "dopamine-readme") } { $selectedSkills += "dopamine-readme" }
       { $_ -in @("changelog", "dopamine-changelog") } { $selectedSkills += "dopamine-changelog" }
     }

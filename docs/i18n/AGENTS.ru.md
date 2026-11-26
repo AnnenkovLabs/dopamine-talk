@@ -15,5 +15,7 @@
 Для глубокой активации каждого режима используй скиллы из `skills-ru/`:
 
 - `skills-ru/dopamine-talk/SKILL.md` — декомпрессия после агентного RL и живой инженерный характер.
+- `skills-ru/dopamine-plan/SKILL.md` — боевые планы в часах и днях с разведкой аналогов, передним краем науки и нулём хардкода.
+- `skills-ru/dopamine-engineering/SKILL.md` — адаптивный код без регексов и костылей, живая проверка, тактильные UI-контролы и чистые надписи.
 - `skills-ru/dopamine-readme/SKILL.md` — живые витрины README под тест 5 секунд.
 - `skills-ru/dopamine-changelog/SKILL.md` — чейнджлоги языком пользы (`f'(x)`) вместо пересказа `git diff`.

@@ -82,8 +82,8 @@ Options:
   --lang en|ru          Skill edition:
                           en = Western English (sharp, zero AI slop)
                           ru = Native Russian (живой русский, без Runglish)
-  --skills LIST         Comma-separated skills: all, talk, readme, changelog
-                        (or full names: dopamine-talk, dopamine-readme, dopamine-changelog)
+  --skills LIST         Comma-separated skills: all, talk, plan, engineering, readme, changelog
+                        (or full names: dopamine-talk, dopamine-plan, dopamine-engineering, dopamine-readme, dopamine-changelog)
   --link                Install via symlinks (auto-updates on git pull)
   --copy                Install standalone copies
   --global-rules        Enable always-on global rules for selected agents (default with --yes)
@@ -120,11 +120,13 @@ normalize_skill_name() {
   local raw
   raw="$(lower "$1")"
   case "$raw" in
-    talk|dopamine-talk)           printf 'dopamine-talk\n' ;;
-    readme|dopamine-readme)       printf 'dopamine-readme\n' ;;
-    changelog|dopamine-changelog) printf 'dopamine-changelog\n' ;;
-    all|'*')                      printf 'ALL\n' ;;
-    *)                            return 1 ;;
+    talk|dopamine-talk)               printf 'dopamine-talk\n' ;;
+    plan|dopamine-plan)               printf 'dopamine-plan\n' ;;
+    eng|engineering|dopamine-engineering) printf 'dopamine-engineering\n' ;;
+    readme|dopamine-readme)           printf 'dopamine-readme\n' ;;
+    changelog|dopamine-changelog)     printf 'dopamine-changelog\n' ;;
+    all|'*')                          printf 'ALL\n' ;;
+    *)                                return 1 ;;
   esac
 }
 
@@ -167,6 +169,8 @@ while [[ $# -gt 0 ]]; do
         _norm="$(normalize_skill_name "$_p")" || { echo "${RED}error:${RESET} unknown skill '$_p'" >&2; exit 2; }
         if [[ "$_norm" == "ALL" ]]; then
           add_skill_unique "dopamine-talk"
+          add_skill_unique "dopamine-plan"
+          add_skill_unique "dopamine-engineering"
           add_skill_unique "dopamine-readme"
           add_skill_unique "dopamine-changelog"
         else
@@ -217,6 +221,8 @@ while [[ $# -gt 0 ]]; do
       _norm="$(normalize_skill_name "$1")" || { echo "${RED}error:${RESET} unknown skill '$1'" >&2; exit 2; }
       if [[ "$_norm" == "ALL" ]]; then
         add_skill_unique "dopamine-talk"
+        add_skill_unique "dopamine-plan"
+        add_skill_unique "dopamine-engineering"
         add_skill_unique "dopamine-readme"
         add_skill_unique "dopamine-changelog"
       else
@@ -437,7 +443,7 @@ if [[ "$MODE" == "status" ]]; then
   for i in "${!KNOWN_AGENT_DIRS[@]}"; do
     dir="${KNOWN_AGENT_DIRS[$i]}"
     [[ -d "$dir" ]] || continue
-    for s in dopamine-talk dopamine-readme dopamine-changelog; do
+    for s in dopamine-talk dopamine-plan dopamine-engineering dopamine-readme dopamine-changelog; do
       p="$dir/$s"
       if [[ -L "$p" || -d "$p" ]]; then
         found_any=1
@@ -481,14 +487,18 @@ if [[ "$MODE" == "list" ]]; then
   echo "${BOLD}${CORAL}Available Dopamine Talk Skills${RESET}"
   echo ""
   echo "  ${BOLD}English (Western edition — skills/)${RESET}"
-  printf '    %-22s %s\n' "dopamine-talk"      "skills/dopamine-talk       (sharp dialogue, zero caveats or AI slop)"
-  printf '    %-22s %s\n' "dopamine-readme"    "skills/dopamine-readme     (5-second visual GitHub showcases)"
-  printf '    %-22s %s\n' "dopamine-changelog" "skills/dopamine-changelog  (user-impact f'(x) release notes)"
+  printf '    %-22s %s\n' "dopamine-talk"        "skills/dopamine-talk         (sharp dialogue, zero caveats or AI slop)"
+  printf '    %-22s %s\n' "dopamine-plan"        "skills/dopamine-plan         (recon-first agent-time battle blueprints)"
+  printf '    %-22s %s\n' "dopamine-engineering" "skills/dopamine-engineering  (adaptive zero-regex code & tactile UI craft)"
+  printf '    %-22s %s\n' "dopamine-readme"      "skills/dopamine-readme       (5-second visual GitHub showcases)"
+  printf '    %-22s %s\n' "dopamine-changelog"   "skills/dopamine-changelog    (user-impact f'(x) release notes)"
   echo ""
   echo "  ${BOLD}Русский (Оригинальная версия — skills-ru/)${RESET}"
-  printf '    %-22s %s\n' "dopamine-talk"      "skills-ru/dopamine-talk       (живое общение без духоты и Runglish)"
-  printf '    %-22s %s\n' "dopamine-readme"    "skills-ru/dopamine-readme     (витрины README под правило 5 секунд)"
-  printf '    %-22s %s\n' "dopamine-changelog" "skills-ru/dopamine-changelog  (понятные чейнджлоги и точные CVE)"
+  printf '    %-22s %s\n' "dopamine-talk"        "skills-ru/dopamine-talk         (живое общение без духоты и Runglish)"
+  printf '    %-22s %s\n' "dopamine-plan"        "skills-ru/dopamine-plan         (боевые планы в часах/днях с разведкой)"
+  printf '    %-22s %s\n' "dopamine-engineering" "skills-ru/dopamine-engineering  (гибкий код без регексов и тактильный UI)"
+  printf '    %-22s %s\n' "dopamine-readme"      "skills-ru/dopamine-readme       (витрины README под правило 5 секунд)"
+  printf '    %-22s %s\n' "dopamine-changelog"   "skills-ru/dopamine-changelog    (понятные чейнджлоги и точные CVE)"
   echo ""
   exit 0
 fi
@@ -526,7 +536,7 @@ if [[ "$MODE" == "uninstall" ]]; then
     done
   fi
   if [[ ${#SELECTED_SKILLS[@]} -eq 0 ]]; then
-    SELECTED_SKILLS=("dopamine-talk" "dopamine-readme" "dopamine-changelog")
+    SELECTED_SKILLS=("dopamine-talk" "dopamine-plan" "dopamine-engineering" "dopamine-readme" "dopamine-changelog")
   fi
 
   echo ""
@@ -610,34 +620,40 @@ if [[ ${#SELECTED_SKILLS[@]} -eq 0 ]]; then
   if [[ $CAN_PROMPT -eq 1 ]]; then
     if [[ "$EDITION" == "ru" ]]; then
       echo "${BOLD}2. Какие скиллы поставить?${RESET}"
-      echo "   ${AMBER}1)${RESET} ${BOLD}dopamine-talk${RESET}       ${DIM}— живое общение без духоты и оговорок${RESET}"
-      echo "   ${AMBER}2)${RESET} ${BOLD}dopamine-readme${RESET}     ${DIM}— README на GitHub под правило 5 секунд${RESET}"
-      echo "   ${AMBER}3)${RESET} ${BOLD}dopamine-changelog${RESET}  ${DIM}— понятные списки обновлений для людей${RESET}"
-      ans="$(prompt_line "   Номера через запятую или Enter для всех трёх [all]: ")"
+      echo "   ${AMBER}1)${RESET} ${BOLD}dopamine-talk${RESET}         ${DIM}— живое общение без духоты и оговорок${RESET}"
+      echo "   ${AMBER}2)${RESET} ${BOLD}dopamine-plan${RESET}         ${DIM}— боевые планы в часах/днях с разведкой${RESET}"
+      echo "   ${AMBER}3)${RESET} ${BOLD}dopamine-engineering${RESET}  ${DIM}— гибкий код без регексов и тактильный UI${RESET}"
+      echo "   ${AMBER}4)${RESET} ${BOLD}dopamine-readme${RESET}       ${DIM}— README на GitHub под правило 5 секунд${RESET}"
+      echo "   ${AMBER}5)${RESET} ${BOLD}dopamine-changelog${RESET}    ${DIM}— понятные списки обновлений для людей${RESET}"
+      ans="$(prompt_line "   Номера через запятую или Enter для всех пяти [all]: ")"
     else
       echo "${BOLD}2. Which skills do you want?${RESET}"
-      echo "   ${AMBER}1)${RESET} ${BOLD}dopamine-talk${RESET}       ${DIM}— sharp, high-drive chat with zero caveats${RESET}"
-      echo "   ${AMBER}2)${RESET} ${BOLD}dopamine-readme${RESET}     ${DIM}— 5-second visual GitHub showcases${RESET}"
-      echo "   ${AMBER}3)${RESET} ${BOLD}dopamine-changelog${RESET}  ${DIM}— user-impact release notes & CVE clarity${RESET}"
-      ans="$(prompt_line "   Numbers separated by commas, or Enter for all 3 [all]: ")"
+      echo "   ${AMBER}1)${RESET} ${BOLD}dopamine-talk${RESET}         ${DIM}— sharp, high-drive chat with zero caveats${RESET}"
+      echo "   ${AMBER}2)${RESET} ${BOLD}dopamine-plan${RESET}         ${DIM}— recon-first agent-time battle blueprints${RESET}"
+      echo "   ${AMBER}3)${RESET} ${BOLD}dopamine-engineering${RESET}  ${DIM}— adaptive zero-regex code & tactile UI craft${RESET}"
+      echo "   ${AMBER}4)${RESET} ${BOLD}dopamine-readme${RESET}       ${DIM}— 5-second visual GitHub showcases${RESET}"
+      echo "   ${AMBER}5)${RESET} ${BOLD}dopamine-changelog${RESET}    ${DIM}— user-impact release notes & CVE clarity${RESET}"
+      ans="$(prompt_line "   Numbers separated by commas, or Enter for all 5 [all]: ")"
     fi
     ans="$(printf '%s' "${ans:-all}" | tr -d '[:space:]')"
     if [[ -z "$ans" || "$(lower "$ans")" == "all" || "$ans" == "*" ]]; then
-      SELECTED_SKILLS=("dopamine-talk" "dopamine-readme" "dopamine-changelog")
+      SELECTED_SKILLS=("dopamine-talk" "dopamine-plan" "dopamine-engineering" "dopamine-readme" "dopamine-changelog")
     else
       IFS=',' read -r -a _nums <<< "$ans"
       for n in "${_nums[@]}"; do
         case "$n" in
-          1|talk|dopamine-talk)           add_skill_unique "dopamine-talk" ;;
-          2|readme|dopamine-readme)       add_skill_unique "dopamine-readme" ;;
-          3|changelog|dopamine-changelog) add_skill_unique "dopamine-changelog" ;;
+          1|talk|dopamine-talk)                   add_skill_unique "dopamine-talk" ;;
+          2|plan|dopamine-plan)                   add_skill_unique "dopamine-plan" ;;
+          3|eng|engineering|dopamine-engineering) add_skill_unique "dopamine-engineering" ;;
+          4|readme|dopamine-readme)               add_skill_unique "dopamine-readme" ;;
+          5|changelog|dopamine-changelog)         add_skill_unique "dopamine-changelog" ;;
           *) echo "${RED}error:${RESET} invalid skill selection '$n'" >&2; exit 2 ;;
         esac
       done
     fi
     echo ""
   else
-    SELECTED_SKILLS=("dopamine-talk" "dopamine-readme" "dopamine-changelog")
+    SELECTED_SKILLS=("dopamine-talk" "dopamine-plan" "dopamine-engineering" "dopamine-readme" "dopamine-changelog")
   fi
 fi
 
@@ -817,7 +833,7 @@ for skill in "${SELECTED_SKILLS[@]}"; do
         remove_entry "$dst"
       elif [[ -L "$dst" ]]; then
         cur_link="$(readlink "$dst" 2>/dev/null || true)"
-        if [[ "$cur_link" == *"dopamine-talk"* || "$cur_link" == *"dopamine-readme"* || "$cur_link" == *"dopamine-changelog"* ]]; then
+        if [[ "$cur_link" == *"dopamine-talk"* || "$cur_link" == *"dopamine-plan"* || "$cur_link" == *"dopamine-engineering"* || "$cur_link" == *"dopamine-readme"* || "$cur_link" == *"dopamine-changelog"* ]]; then
           remove_entry "$dst"
         else
           echo "  ${AMBER}!${RESET} skip     $dst ${DIM}(symlink to unrelated path — pass --force to replace)${RESET}" >&2
@@ -874,11 +890,11 @@ echo ""
 if [[ $installed -gt 0 || $rules_installed -gt 0 ]]; then
   if [[ "$EDITION" == "ru" ]]; then
     echo "${GREEN}${BOLD}Готово!${RESET} Установлено скиллов: ${BOLD}${installed}${RESET}, глобальных правил: ${BOLD}${rules_installed}${RESET} (${EDITION_LABEL})."
-    echo "${DIM}Открой новый чат в агенте — режим уже активен. Триггеры: «дофаминовое общение», «дофаминовый ридми», «дофаминовый чейнджлог».${RESET}"
+    echo "${DIM}Открой новый чат в агенте — режим уже активен. Триггеры: «дофаминовое общение», «дофаминовый план», «дофаминовая инженерия», «дофаминовый ридми», «дофаминовый чейнджлог».${RESET}"
     echo "${DIM}Проверка: curl -fsSL ${SHORT_URL} | bash -s -- --status  |  Удалить: ... --uninstall${RESET}"
   else
     echo "${GREEN}${BOLD}Done!${RESET} Installed ${BOLD}${installed}${RESET} skill(s) and ${BOLD}${rules_installed}${RESET} always-on rule target(s) (${EDITION_LABEL})."
-    echo "${DIM}Start a new chat — Dopamine Talk is active immediately. Triggers: \"dopamine-talk\", \"dopamine-readme\", \"dopamine-changelog\".${RESET}"
+    echo "${DIM}Start a new chat — Dopamine Talk is active immediately. Triggers: \"dopamine-talk\", \"dopamine-plan\", \"dopamine-engineering\", \"dopamine-readme\", \"dopamine-changelog\".${RESET}"
     echo "${DIM}Status: curl -fsSL ${SHORT_URL} | bash -s -- --status  |  Uninstall: ... --uninstall${RESET}"
   fi
 fi

@@ -1,5 +1,29 @@
 # Changelog
 
+## 1.1.0
+
+November 26, 2026 · Planning & Adaptive Engineering Expansion
+
+**Dopamine Talk grows from 3 skills to a complete 5-skill engineering pack in both native English and native Russian.** Adding `dopamine-plan` and `dopamine-engineering` extends decompression from how your agent *talks* to how it *plans architecture, writes adaptive code, verifies live runs, and crafts user-facing UI*.
+
+### 🔥 Release Highlights
+
+- **New skill: `dopamine-plan` (EN + RU).** Kills 400-line corporate spec bloat, fictional *"3-6 month"* human-team timelines, vacuum architecture invented without competitor/open-source recon, legacy defaults on frontier research tasks, and 9-question interrogations. Produces one-screen vertical battle blueprints scoped in hours and days with zero hardcode or regex foundations.
+- **New skill: `dopamine-engineering` (EN + RU).** Bans regex crutches and hardcoded logic in favor of real parsers, ASTs, typed contracts, and the simplicity ladder (`ponytail`). Pairs single-pass recon and real-run live verification (`benjamin-plus`) with zero laziness on UX: purpose-built tactile controls (sliders, scrubbers, swatches, segmented controls) instead of lazy text inputs, minimal on-screen choices, and clear human UI copy free of both AI fluff and cryptic chopped stubs.
+- **Full pack wiring across all 20+ agents.** Updated `install.sh`, `install.ps1`, `AGENTS.md`, `docs/i18n/AGENTS.ru.md`, `rules/AGENTS.md`, and every plugin manifest (Claude Code, OpenAI Codex, Antigravity, Gemini CLI, GitHub Copilot CLI, `npx skills`) to ship all 5 skills (`10` `SKILL.md` files across EN + RU) out of the box.
+
+### 📈 Before -> After
+
+In theory:
+
+| Workflow | Default Agent Autopilot | With Dopamine Talk 1.1.0 | Net Shift |
+| :--- | :--- | :--- | :--- |
+| **Architecture plans** | 400-line "4–6 month" roadmap, regex router, 9 questions | **1-screen blueprint in hours/days**, real competitor recon, 1–2 real forks | **Zero spec bloat** |
+| **Backend & agent code** | Regex hacks, single-impl factories, 40 mocked unit tests | **Simplicity ladder + typed schemas**, verified by a live real-data run | **−70–85% dead code** |
+| **Frontend controls & copy** | Text boxes + 12 buttons + AI slop (or chopped `Cfg.` stubs) | **Tactile controls + 1 primary action** + instant-clarity human copy | **4 clicks → 1 gesture** |
+
+---
+
 ## 1.0.0
 
 November 24, 2026 · Public Launch
