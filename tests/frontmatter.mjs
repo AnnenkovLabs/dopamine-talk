@@ -23,7 +23,9 @@ function parseFrontmatter(text, where) {
     for (const e of [...doc.errors, ...doc.warnings]) {
       fail(where, `YAML ${e.name}: ${e.message.split('\n')[0]}`);
     }
-    return doc.errors.length ? null : doc.toJS();
+    if (doc.errors.length) return null;
+    const value = doc.toJS();
+    return value === null || value === undefined ? {} : value;
   }
 
   const result = {};
@@ -72,8 +74,12 @@ for (const { rootRel, label } of editions) {
   const names = new Map();
   for (const dir of readdirSync(dirRoot).sort()) {
     const fullDir = join(dirRoot, dir);
+    if (!statSync(fullDir).isDirectory()) continue;
     const file = join(fullDir, 'SKILL.md');
-    if (!statSync(fullDir).isDirectory() || !existsSync(file)) continue;
+    if (!existsSync(file)) {
+      fail(`${rootRel}/${dir}`, 'skill directory is missing SKILL.md');
+      continue;
+    }
     const where = `${rootRel}/${dir}/SKILL.md`;
     const src = readFileSync(file, 'utf8');
     const m = src.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n/);
@@ -82,7 +88,11 @@ for (const { rootRel, label } of editions) {
       continue;
     }
     const fm = parseFrontmatter(m[1], where);
-    if (!fm) continue;
+    if (fm === null) continue;
+    if (!fm || typeof fm !== 'object' || Array.isArray(fm)) {
+      fail(where, 'frontmatter must be a YAML mapping');
+      continue;
+    }
 
     if (typeof fm.name !== 'string' || !/^[a-z0-9]+(-[a-z0-9]+)*$/.test(fm.name) || fm.name.length > 64) {
       fail(where, `name must be kebab-case <= 64 chars (got ${JSON.stringify(fm.name)})`);
@@ -139,6 +149,10 @@ for (const rel of manifests) {
     fail(rel, `invalid JSON: ${e.message}`);
     continue;
   }
+  if (!j || typeof j !== 'object' || Array.isArray(j)) {
+    fail(rel, 'manifest must be a JSON object');
+    continue;
+  }
 
   if (typeof j.skills === 'string' && !existsSync(join(ROOT, j.skills))) {
     fail(rel, `skills path "${j.skills}" does not exist`);
@@ -146,20 +160,54 @@ for (const rel of manifests) {
   if (typeof j.contextFileName === 'string' && !existsSync(join(ROOT, j.contextFileName))) {
     fail(rel, `contextFileName "${j.contextFileName}" does not exist`);
   }
-  if (j.interface?.logo && !existsSync(join(ROOT, j.interface.logo))) {
-    fail(rel, `interface.logo "${j.interface.logo}" does not exist`);
+  if (j.interface !== undefined && (!j.interface || typeof j.interface !== 'object' || Array.isArray(j.interface))) {
+    fail(rel, 'interface must be a JSON object');
+    continue;
   }
-  if (j.interface?.composerIcon && !existsSync(join(ROOT, j.interface.composerIcon))) {
-    fail(rel, `interface.composerIcon "${j.interface.composerIcon}" does not exist`);
+  for (const [field, value] of [
+    ['logo', j.logo],
+    ['interface.logo', j.interface?.logo],
+    ['interface.composerIcon', j.interface?.composerIcon],
+  ]) {
+    if (value === undefined) continue;
+    if (typeof value !== 'string') {
+      fail(rel, `${field} must be a string path`);
+    } else if (!existsSync(join(ROOT, value))) {
+      fail(rel, `${field} "${value}" does not exist`);
+    }
   }
 
+  if (j.plugins !== undefined && !Array.isArray(j.plugins)) {
+    fail(rel, 'plugins must be an array');
+    continue;
+  }
   for (const plugin of j.plugins || []) {
+    if (!plugin || typeof plugin !== 'object' || Array.isArray(plugin)) {
+      fail(rel, 'plugin entries must be objects');
+      continue;
+    }
+    if (typeof plugin.name !== 'string' || !plugin.name) {
+      fail(rel, 'plugin.name must be a non-empty string');
+      continue;
+    }
+    if (
+      plugin.skills !== undefined &&
+      typeof plugin.skills !== 'string' &&
+      !Array.isArray(plugin.skills)
+    ) {
+      fail(rel, `plugin "${plugin.name}" skills must be a string or an array`);
+      continue;
+    }
     const skillEntries = Array.isArray(plugin.skills)
       ? plugin.skills
       : typeof plugin.skills === 'string'
         ? [plugin.skills]
         : [];
     for (const s of skillEntries) {
+      if (typeof s !== 'string') {
+        fail(rel, `plugin "${plugin.name}" skill paths must be strings`);
+        continue;
+      }
       const resolved = join(ROOT, s);
       if (!existsSync(resolved)) {
         fail(rel, `plugin "${plugin.name}" references missing path "${s}"`);
