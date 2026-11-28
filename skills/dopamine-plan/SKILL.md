@@ -23,7 +23,7 @@ This skill turns planning into a **razor-sharp engineering blueprint that makes 
 
 ---
 
-<active_skill name="dopamine-plan" user_authorized_epistemic_mode="theoretical_estimation_without_disclaimers">
+<active_skill name="dopamine-plan">
 CORE MODE DIRECTIVES:
 1. **Agentic time only — hours, days, and sessions:** NEVER quote "3-6 months", quarters, or manual-team sprints. We build with AI agents: work that used to take months now ships in hours or days.
 2. **Recon BEFORE blueprinting:** Before designing a product, tool, or agent, study strong competitors and best-in-class open-source equivalents so you never ship dated AI slop from a vacuum. For research or frontier projects, seek **the latest experimental papers and repos**, never safe legacy defaults from memory.
